@@ -1,2 +1,2 @@
-k8s-proxysql-cluster
+# k8s-proxysql-cluster
 Kubernetes ProxySQL Cluster
