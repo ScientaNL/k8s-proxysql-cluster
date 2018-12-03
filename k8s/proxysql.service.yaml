@@ -9,9 +9,9 @@ spec:
   ports:
     - port: 6032
       protocol: TCP
-      name: sql
+      name: proxysql-admin
     - port: 6033
       protocol: TCP
-      name: admin
+      name: proxysql-sql
   selector:
     app: proxysql
