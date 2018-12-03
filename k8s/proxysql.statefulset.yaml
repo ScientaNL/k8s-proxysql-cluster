@@ -28,10 +28,17 @@ spec:
         - image: scienta/k8s-proxysql-cluster:branch-2.0.0-rc2
           name: proxysql
 
+          imagePullPolicy: Always
           ports:
             - containerPort: 6033
               name: proxysql-mysql
             - containerPort: 6032
               name: proxysql-admin
+
+          lifecycle:
+            postStart:
+              exec:
+                command: [ "/bin/sh", "-c", "sleep .5;" ]
+
 
           args: [ "--k8s-cluster" ]
