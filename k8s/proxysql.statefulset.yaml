@@ -25,7 +25,7 @@ spec:
     spec:
       restartPolicy: Always
       containers:
-        - image: scienta/k8s-proxysql-cluster:2.0.0-rc2
+        - image: scienta/k8s-proxysql-cluster:branch-2.0.0-rc2
           name: proxysql
 
           ports:
@@ -34,4 +34,4 @@ spec:
             - containerPort: 6032
               name: proxysql-admin
 
-          command: [ "--k8s-cluster" ]
+          args: [ "--k8s-cluster" ]
