@@ -6,7 +6,18 @@ pipeline:
     repo: scienta/k8s-proxysql-cluster
     dockerfile: ./docker/k8s-proxysql-cluster.Dockerfile
     context: ./
-    tags: "k8s-proxysql-cluster-${DRONE_BRANCH}"
+    tags: "branch-${DRONE_BRANCH}"
     secrets: [ docker_username, docker_password ]
     when:
       event: [push]
+
+  build-tag:
+    group: build-k8s-proxysql
+    image: plugins/docker
+    repo: scienta/k8s-proxysql-cluster
+    dockerfile: ./docker/k8s-proxysql-cluster.Dockerfile
+    context: ./
+    tags: "tag-${DRONE_TAG}"
+    secrets: [ docker_username, docker_password ]
+    when:
+      event: [tag]
