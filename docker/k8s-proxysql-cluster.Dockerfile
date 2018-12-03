@@ -11,12 +11,11 @@ RUN apt-get update && \
     rm -f /tmp/proxysql-${VERSION}-debian9_amd64.deb && \
     rm -rf /var/lib/apt/lists/*
 
-
 COPY ./files/init-k8s-cluster.sh /init-k8s-cluster.sh
 COPY ./files/proxysql-k8s-cluster.cnf /proxysql-k8s-cluster.cnf
 COPY ./files/entrypoint.sh /entrypoint.sh
 
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh /init-k8s-cluster.sh
 
 EXPOSE 6032 6033
 ENTRYPOINT [ "/entrypoint.sh" ]
