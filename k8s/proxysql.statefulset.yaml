@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: StatefulSet
+
+metadata:
+  name: proxysql
+  labels:
+    app: proxysql
+
+spec:
+  replicas: 6
+  serviceName: proxysql
+
+  updateStrategy:
+    type: OnDelete
+
+  selector:
+    matchLabels:
+      app: proxysql
+
+  template:
+    metadata:
+      labels:
+        app: proxysql
+
+    spec:
+      restartPolicy: Always
+      containers:
+        - image: scienta/k8s-proxysql-cluster:2.0.0-rc2
+          name: proxysql
+
+          volumeMounts:
+            - mountPath: /etc/proxysql.cnf
+              name: proxysql
+              subPath: proxysql.cnf
+            - mountPath: /init.sh
+              name: proxysql
+              subPath: init.sh
+            - mountPath: /exit.sh
+              name: proxysql
+              subPath: exit.sh
+            - mountPath: /test.sh
+              name: proxysql
+              subPath: test.sh
+
+          ports:
+            - containerPort: 6033
+              name: proxysql-mysql
+            - containerPort: 6032
+              name: proxysql-admin
+
+          env:
+            - name: uid
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+          command: [ "--k8s-cluster" ]
+
+      volumes:
+
+        - name: proxysql
+          configMap:
+            name: proxysql
+            defaultMode: 0777
