@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: StatefulSet
+
+metadata:
+  name: proxysql
+  labels:
+    app: proxysql
+
+spec:
+  replicas: 6
+  serviceName: proxysql
+
+  updateStrategy:
+    type: OnDelete
+
+  selector:
+    matchLabels:
+      app: proxysql
+
+  template:
+    metadata:
+      labels:
+        app: proxysql
+
+    spec:
+      restartPolicy: Always
+      containers:
+        - image: scienta/k8s-proxysql-cluster:branch-1.4.14
+          name: proxysql
+
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 6033
+              name: proxysql-mysql
+            - containerPort: 6032
+              name: proxysql-admin
+
+          lifecycle:
+            postStart:
+              exec:
+                command: [ "/bin/sh", "-c", "sleep .5;" ]
+
+
+          args: [ "--k8s-cluster" ]
