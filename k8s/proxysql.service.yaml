@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxysql
+  labels:
+    app: proxysql
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6032
+      protocol: TCP
+      name: proxysql-admin
+    - port: 6033
+      protocol: TCP
+      name: proxysql-sql
+  selector:
+    app: proxysql
