@@ -1,15 +1,15 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -e
 
-# first arg is `--k8s-cluster`
-if [ "${1}" = "--k8s-cluster" ]; then
-    /init-k8s-cluster.sh &
-	set -- proxysql -f -c /proxysql-k8s-cluster.cnf
+cp -n /var/lib/proxysql-data/* /var/lib/proxysql/
+if [[ "${1}" = "--cluster" ]]; then
+    proxysql-cli init &
+	set -- proxysql -f --reload
+elif [[ "${1}" = "--sync" ]]; then
+	proxysql -f --initial &> /dev/null &
+	set -- proxysql-cli sync
+else
+	set -- proxysql -f "$@"
 fi
 
-# first arg is `-f` or `--some-option`
-if [ "${1#-}" != "$1" ]; then
-	set -- proxysql "$@"
-fi
-
-exec "$@"
+exec "${@}"

@@ -7,7 +7,7 @@ metadata:
     app: proxysql
 
 spec:
-  replicas: 6
+  replicas: 3
   serviceName: proxysql
 
   updateStrategy:
@@ -25,20 +25,41 @@ spec:
     spec:
       restartPolicy: Always
       containers:
-        - image: scienta/k8s-proxysql-cluster:branch-1.4.14
+        - image: "1.0.4"
           name: proxysql
+          imagePullPolicy: Never
 
-          imagePullPolicy: Always
           ports:
             - containerPort: 6033
               name: proxysql-mysql
             - containerPort: 6032
               name: proxysql-admin
 
-          lifecycle:
-            postStart:
-              exec:
-                command: [ "/bin/sh", "-c", "sleep .5;" ]
+          env:
+            - name: MONITOR_USERNAME
+              value: "replace!"
+            - name: MONITOR_PASSWORD
+              value: "replace!"
 
+          readinessProbe:
+            initialDelaySeconds: 1
+            periodSeconds: 1
 
-          args: [ "--k8s-cluster" ]
+            exec:
+              command:
+                - cat
+                - /proxysql-ready
+
+          args: [ "--cluster" ]
+
+          volumeMounts:
+            - mountPath: /etc/proxysql.cnf
+              name: proxysql
+              subPath: proxysql.cnf
+
+      volumes:
+
+        - name: proxysql
+          configMap:
+            name: proxysql
+            defaultMode: 0777
