@@ -20,5 +20,7 @@ COPY ./files/data /var/lib/proxysql-data
 RUN ln -s /proxysql-cli/proxysql-cli.sh /usr/bin/proxysql-cli && \
     chmod +x -R /entrypoint.sh /proxysql-cli /etc/proxysql.cnf
 
+RUN chmod +x -R /entrypoint.sh /proxysql-cli /etc/proxysql.cnf
+
 EXPOSE 6032 6033
 ENTRYPOINT [ "/entrypoint.sh" ]
