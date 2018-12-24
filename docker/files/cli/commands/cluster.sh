@@ -26,7 +26,7 @@ command_init() {
 
 commands_add "cluster:query [QUERY]" "perform mysql query on the cluster"
 command_query() {
-    echo -e $(proxysql_execute_query "$1")
+    echo $(proxysql_execute_query "$1")
 }
 
 commands_add "show:nodes" "Show al the nodes of the cluster"
@@ -38,20 +38,6 @@ commands_add "sync" "Synchronize from backends"
 command_sync() {
 
     proxysql_wait_for_admin
-
-    echo "join"
-    proxysql_execute_query "
-        INSERT INTO proxysql_servers VALUES ('${IP}', 6032, 0, '${IP}');
-        LOAD PROXYSQL SERVERS TO RUN;
-    " "proxysql";
-
-
-    proxysql_execute_query "
-        LOAD MYSQL VARIABLES TO RUN;
-        LOAD MYSQL QUERY RULES TO RUN;
-        LOAD MYSQL USERS TO RUN;
-        LOAD MYSQL SERVERS TO RUN;
-        LOAD ADMIN VARIABLES TO RUN;";
 
     echo -e "\e[33mGetting users\e[0m"
 
@@ -84,14 +70,21 @@ command_sync() {
         LOAD MYSQL SERVERS TO RUN;
         LOAD ADMIN VARIABLES TO RUN;";
 
-    sleep 5
+    sleep 1
+
+    proxysql_execute_query "
+        INSERT INTO proxysql_servers VALUES ('${IP}', 6032, 0, '${IP}');
+        LOAD PROXYSQL SERVERS TO RUN;
+    " "proxysql";
+
+    sleep 10
 
     proxysql_execute_query "
         DELETE FROM proxysql_servers WHERE hostname = '${IP}';
         LOAD PROXYSQL SERVERS TO RUN;
     " "proxysql";
 
-    sleep 10
+    sleep 5
 
     echo -e "-- DONE --"
 }

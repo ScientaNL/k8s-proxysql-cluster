@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 function proxysql_execute_query() {
+
     QUERY=${1}
     HOST=${2:-127.0.0.1}
 
@@ -7,14 +8,17 @@ function proxysql_execute_query() {
 }
 
 function mysql_execute_query() {
+
     QUERY=${1}
     HOST=${2:-127.0.0.1}
 
-    mysql -u${MYSQL_USERNAME} -p${MYSQL_PASSWORD} -h${HOST} -s -N -e "${QUERY}"
+    mysql -u${MONITOR_USERNAME} -p${MONITOR_PASSWORD} -h${HOST} -s -N -e "${QUERY}"
 }
 
 function proxysql_wait_for_admin() {
+
     SLEEP=${1:-.1}
+
     while ! mysqladmin ping -u${ADMIN_USERNAME} -p${ADMIN_PASSWORD} -h127.0.0.1 -P6032 --silent; do
         sleep ${SLEEP}
     done

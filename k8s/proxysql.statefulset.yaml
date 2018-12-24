@@ -25,21 +25,15 @@ spec:
     spec:
       restartPolicy: Always
       containers:
-        - image: "1.0.4"
+        - image: "scienta/k8s-proxysql-cluster:branch-v2.0.0-test"
           name: proxysql
-          imagePullPolicy: Never
+          imagePullPolicy: Always
 
           ports:
             - containerPort: 6033
               name: proxysql-mysql
             - containerPort: 6032
               name: proxysql-admin
-
-          env:
-            - name: MONITOR_USERNAME
-              value: "replace!"
-            - name: MONITOR_PASSWORD
-              value: "replace!"
 
           readinessProbe:
             initialDelaySeconds: 1

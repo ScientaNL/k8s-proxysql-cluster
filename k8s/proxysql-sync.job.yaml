@@ -10,7 +10,7 @@ spec:
       activeDeadlineSeconds: 3600
       containers:
         - name: proxysql-sync
-          image: "1.0.4"
+          image: "scienta/k8s-proxysql-cluster:branch-v2.0.0-test"
           imagePullPolicy: Never
           args: ["--sync"]
 

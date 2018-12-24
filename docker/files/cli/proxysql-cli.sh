@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 
-readonly PROXYSQL_CLI_VERSION="0.1.0"
+readonly PROXYSQL_CLI_VERSION="1.0.0"
 
-: ${ADMIN_USERNAME:=cluster1}
-: ${ADMIN_PASSWORD:=secret1pass}
+: "${ADMIN_USERNAME:=cluster1}"
+: "${ADMIN_PASSWORD:=secret1pass}"
 
-: ${MONITOR_USERNAME:=user}
-: ${MONITOR_PASSWORD:=pass}
+: "${MONITOR_USERNAME:=user}"
+: "${MONITOR_PASSWORD:=pass}"
 
-: ${IP:=$(hostname -i)}
-
+IP=$(hostname -i)
 DIR=$(dirname "$(readlink -f "$0")")
 
 #function
