@@ -48,7 +48,11 @@ command_sync() {
         mysql_execute_query "
             SELECT u.User, u.authentication_string, db.db
             FROM mysql.user as u
-            JOIN mysql.db as db USING (User)" ${server} | while read username password database; do
+            JOIN mysql.db as db USING (User) WHERE db.db in (
+                SELECT SCHEMA_NAME
+                FROM INFORMATION_SCHEMA.SCHEMATA
+            )" ${server} | while read username password database; do
+
                 proxysql_execute_query "
                     INSERT INTO mysql_users (username, password, default_hostgroup, default_schema)
                     VALUES ('${username}', '${password}', '${hostgroup}', '${database}');
@@ -57,6 +61,7 @@ command_sync() {
                 proxysql_execute_query "
                     INSERT INTO mysql_query_rules (active,schemaname,destination_hostgroup,apply)
                     VALUES (1,'${database}','${hostgroup}',1);" &> \dev\null
+
             done
 
     done
