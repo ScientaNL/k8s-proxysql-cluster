@@ -41,32 +41,29 @@ command_sync() {
 
     echo -e "\e[33mGetting users\e[0m"
 
-    proxysql_execute_query "SELECT hostname, port FROM mysql_servers WHERE hostgroup_id NOT IN (
+    proxysql_execute_query "SELECT hostname, hostgroup_id FROM mysql_servers WHERE hostgroup_id NOT IN (
         SELECT reader_hostgroup FROM mysql_replication_hostgroups
     ) OR hostgroup_id IN (
         SELECT writer_hostgroup FROM mysql_replication_hostgroups
-    )  " | while read server; do
+    ) " | while read hostname hostgroup; do
 
         mysql_execute_query "
             SELECT u.User, u.authentication_string, db.db
-            FROM mysql.user as u
-            JOIN mysql.db as db USING (User) WHERE db.db in (
-                SELECT SCHEMA_NAME
-                FROM INFORMATION_SCHEMA.SCHEMATA
-            )" ${server} | while read username password database; do
+            FROM mysql.db as db
+            JOIN mysql.user as u USING (User)
+            " ${hostname} | while read username password database; do
 
                 proxysql_execute_query "
                     INSERT INTO mysql_users (username, password, default_hostgroup, default_schema)
-                    VALUES ('${username}', '${password}', '${hostgroup}', '${database}');
-                    INSERT INTO " &> \dev\null
+                    VALUES ('${username}', '${password}', '${hostgroup}', '${database}');"
 
                 proxysql_execute_query "
                     INSERT INTO mysql_query_rules (active,schemaname,destination_hostgroup,apply)
-                    VALUES (1,'${database}','${hostgroup}',1);" &> \dev\null
+                    VALUES (1,'${database}','${hostgroup}',1);"
 
             done
 
-    done
+        done
 
     echo -e "\e[33mJoining cluster\e[0m"
 
