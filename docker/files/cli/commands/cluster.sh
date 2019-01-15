@@ -41,11 +41,11 @@ command_sync() {
 
     echo -e "\e[33mGetting users\e[0m"
 
-    $(proxysql_execute_query "SELECT hostname, port FROM mysql_servers WHERE hostgroup_id NOT IN (
+    proxysql_execute_query "SELECT hostname, port FROM mysql_servers WHERE hostgroup_id NOT IN (
         SELECT reader_hostgroup FROM mysql_replication_hostgroups
     ) OR hostgroup_id IN (
         SELECT writer_hostgroup FROM mysql_replication_hostgroups
-    )  ") | while read server; do
+    )  " | while read server; do
 
         mysql_execute_query "
             SELECT u.User, u.authentication_string, db.db
