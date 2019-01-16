@@ -52,7 +52,7 @@ command_sync() {
         " ${hostname} | awk -vORS=, '{ print $1 }' | sed 's/,$/\n/') ;
 
         mysql_execute_query "
-            SELECT db.db
+            SELECT u.User, u.authentication_string, db.db
             FROM mysql.db as db
             JOIN mysql.user as u ON (u.User = db.User)
             WHERE db.db IN (${availableDatabases})
