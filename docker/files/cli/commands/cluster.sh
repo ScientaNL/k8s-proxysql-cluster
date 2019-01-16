@@ -60,7 +60,8 @@ command_sync() {
 
                 proxysql_execute_query "
                     INSERT INTO mysql_users (username, password, default_hostgroup, default_schema)
-                    VALUES ('${username}', '${password}', '${hostgroup}', '${database}');
+                    VALUES ('${username}', '${password}', '${hostgroup}', '${database}');"
+                proxysql_execute_query  "
                     INSERT INTO mysql_query_rules (active,schemaname,destination_hostgroup,apply)
                     VALUES (1,'${database}','${hostgroup}',1);"
 
