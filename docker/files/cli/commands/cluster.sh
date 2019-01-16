@@ -49,21 +49,25 @@ command_sync() {
 
         availableDatabases=$(mysql_execute_query "
             SELECT QUOTE(SCHEMA_NAME) FROM INFORMATION_SCHEMA.SCHEMATA
-        " ${hostname} | awk -vORS=, '{ print $1 }' | sed 's/,$/\n/') ;
+        " ${hostname}) ;
+        databasesString=$(awk -vORS=, ${availableDatabases} | sed 's/,$/\n/')
+
+        while read database; do
+            proxysql_execute_query  "
+                INSERT INTO mysql_query_rules (active,schemaname,destination_hostgroup,apply)
+                VALUES (1,'${database}','${hostgroup}',1);"
+        done <<< "${availableDatabases}"
 
         mysql_execute_query "
             SELECT u.User, u.authentication_string, db.db
             FROM mysql.db as db
             JOIN mysql.user as u ON (u.User = db.User)
-            WHERE db.db IN (${availableDatabases})
+            WHERE db.db IN (${databasesString})
           " ${hostname} | while read username password database; do
 
                 proxysql_execute_query "
                     INSERT INTO mysql_users (username, password, default_hostgroup, default_schema)
                     VALUES ('${username}', '${password}', '${hostgroup}', '${database}');"
-                proxysql_execute_query  "
-                    INSERT INTO mysql_query_rules (active,schemaname,destination_hostgroup,apply)
-                    VALUES (1,'${database}','${hostgroup}',1);"
 
             done
 
