@@ -6,7 +6,7 @@ if [[ "${1}" = "--cluster" ]]; then
     proxysql-cli init &> /dev/null &
 	set -- proxysql -f --reload
 elif [[ "${1}" = "--sync" ]]; then
-	proxysql -f --reload &> /dev/null &
+	proxysql -f &> /dev/null &
 	set -- proxysql-cli sync
 else
 	set -- proxysql -f "$@"
