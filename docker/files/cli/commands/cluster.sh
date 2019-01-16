@@ -42,22 +42,25 @@ command_sync() {
     echo -e "\e[33mGetting users\e[0m"
 
     proxysql_execute_query "SELECT hostname, hostgroup_id FROM mysql_servers WHERE hostgroup_id NOT IN (
-        SELECT reader_hostgroup FROM mysql_replication_hostgroups
-    ) OR hostgroup_id IN (
-        SELECT writer_hostgroup FROM mysql_replication_hostgroups
-    ) " | while read hostname hostgroup; do
+            SELECT reader_hostgroup FROM mysql_replication_hostgroups
+        ) OR hostgroup_id IN (
+            SELECT writer_hostgroup FROM mysql_replication_hostgroups
+        ) " | while read hostname hostgroup; do
+
+        availableDatabases=$(mysql_execute_query "
+            SELECT QUOTE(SCHEMA_NAME) FROM INFORMATION_SCHEMA.SCHEMATA
+        " ${hostname} | awk -vORS=, '{ print $1 }' | sed 's/,$/\n/') ;
 
         mysql_execute_query "
-            SELECT u.User, u.authentication_string, db.db
+            SELECT db.db
             FROM mysql.db as db
-            JOIN mysql.user as u USING (User)
-            " ${hostname} | while read username password database; do
+            JOIN mysql.user as u ON (u.User = db.User)
+            WHERE db.db IN (${availableDatabases})
+          " ${hostname} | while read username password database; do
 
                 proxysql_execute_query "
                     INSERT INTO mysql_users (username, password, default_hostgroup, default_schema)
-                    VALUES ('${username}', '${password}', '${hostgroup}', '${database}');"
-
-                proxysql_execute_query "
+                    VALUES ('${username}', '${password}', '${hostgroup}', '${database}');
                     INSERT INTO mysql_query_rules (active,schemaname,destination_hostgroup,apply)
                     VALUES (1,'${database}','${hostgroup}',1);"
 
