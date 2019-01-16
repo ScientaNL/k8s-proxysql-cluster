@@ -49,8 +49,8 @@ command_sync() {
 
         availableDatabases=$(mysql_execute_query "
             SELECT QUOTE(SCHEMA_NAME) FROM INFORMATION_SCHEMA.SCHEMATA
-        " ${hostname}) ;
-        databasesString=$(awk -vORS=, "${availableDatabases}" | sed 's/,$/\n/')
+        " ${hostname});
+        databasesString=$(awk -vORS=, ${availableDatabases} | sed 's/,$/\n/')
 
         while read database; do
             proxysql_execute_query  "
