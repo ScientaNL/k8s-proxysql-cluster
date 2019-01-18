@@ -49,13 +49,14 @@ command_sync() {
 
         availableDatabases=$(mysql_execute_query "
             SELECT QUOTE(SCHEMA_NAME) FROM INFORMATION_SCHEMA.SCHEMATA
-        " ${hostname}) ;
-        databasesString=$(awk -vORS=, ${availableDatabases} | sed 's/,$/\n/')
+        " ${hostname});
+        
+        databasesString=$(echo "${availableDatabases}" | awk -vORS=, '{ print $1 }' | sed 's/,$/\n/')
 
         while read database; do
             proxysql_execute_query  "
                 INSERT INTO mysql_query_rules (active,schemaname,destination_hostgroup,apply)
-                VALUES (1,'${database}','${hostgroup}',1);"
+                VALUES (1,${database},'${hostgroup}',1);"
         done <<< "${availableDatabases}"
 
         mysql_execute_query "
