@@ -98,8 +98,8 @@ command_sync() {
         " ${hostname} | while read username password database; do
 
                 proxysql_execute_query "
-                    INSERT INTO mysql_users (username, password, default_hostgroup, default_schema, schema_locked)
-                    VALUES ('${username}', '${password}', '${hostgroup}', '${database}', 1);"
+                    INSERT INTO mysql_users (username, password, default_hostgroup, default_schema)
+                    VALUES ('${username}', '${password}', '${hostgroup}', '${database}');"
 
         done
 
