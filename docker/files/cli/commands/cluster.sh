@@ -4,7 +4,6 @@ commands_add "init" "Add this node to the cluster"
 command_init() {
 
     proxysql_wait_for_admin
-
     proxysql_check_if_first
 
     if [[ "${?}" -eq "1" ]]; then
@@ -13,13 +12,20 @@ command_init() {
         MASTERSERVER="proxysql"
     fi
 
-    proxysql_execute_query "DELETE FROM proxysql_servers WHERE hostname = 'proxysql';
+    proxysql_execute_query "
+        DELETE FROM proxysql_servers
+        WHERE hostname = 'proxysql';
+
         INSERT INTO proxysql_servers VALUES ('${IP}', 6032, 0, '${IP}');
-        LOAD PROXYSQL SERVERS TO RUN;"
+        LOAD PROXYSQL SERVERS TO RUN;
+    "
 
     proxysql_execute_query "
-        INSERT INTO proxysql_servers VALUES ('${IP}', 6032, 0, '${IP}');
-        LOAD PROXYSQL SERVERS TO RUN;" ${MASTERSERVER}
+        INSERT INTO proxysql_servers
+        VALUES ('${IP}', 6032, 0, '${IP}');
+
+        LOAD PROXYSQL SERVERS TO RUN;
+    " ${MASTERSERVER}
 
     touch /proxysql-ready
 }
@@ -39,42 +45,71 @@ command_sync() {
 
     proxysql_wait_for_admin
 
-    echo -e "\e[33mGetting users\e[0m"
+    newDefaultHostgroup=-1
+    newDefaultHostgroupCount=-1
 
-    proxysql_execute_query "SELECT hostname, hostgroup_id FROM mysql_servers WHERE hostgroup_id NOT IN (
-            SELECT reader_hostgroup FROM mysql_replication_hostgroups
+    servers=$(proxysql_execute_query "
+        SELECT hostname, hostgroup_id
+        FROM mysql_servers
+        WHERE hostgroup_id NOT IN (
+            SELECT reader_hostgroup
+            FROM mysql_replication_hostgroups
         ) OR hostgroup_id IN (
-            SELECT writer_hostgroup FROM mysql_replication_hostgroups
-        ) " | while read hostname hostgroup; do
+            SELECT writer_hostgroup
+            FROM mysql_replication_hostgroups
+        )
+    ");
+
+    while read hostname hostgroup; do
+
+        echo -e "\e[33m Server: ${hostname} \n --- \e[0m"
 
         availableDatabases=$(mysql_execute_query "
-            SELECT QUOTE(SCHEMA_NAME) FROM INFORMATION_SCHEMA.SCHEMATA
+            SELECT QUOTE(SCHEMA_NAME)
+            FROM INFORMATION_SCHEMA.SCHEMATA
         " ${hostname});
-        
+
+        databaseCount=$(wc -l <<< "${availableDatabases}")
+
+        if [[ ${newDefaultHostgroupCount} = -1 ||  databaseCount < newDefaultHostgroupCount ]]; then
+            newDefaultHostgroupCount="${databaseCount}"
+            newDefaultHostgroup="${hostgroup}"
+        fi
+
         databasesString=$(echo "${availableDatabases}" | awk -vORS=, '{ print $1 }' | sed 's/,$/\n/')
 
+        echo -e "\e[33m Adding schema rules... \n --- \e[0m"
+
         while read database; do
+
             proxysql_execute_query  "
-                INSERT INTO mysql_query_rules (active,schemaname,destination_hostgroup,apply)
-                VALUES (1,${database},'${hostgroup}',1);"
+                INSERT INTO mysql_query_rules (active, schemaname, destination_hostgroup, apply )
+                VALUES (1, ${database}, '${hostgroup}', 1);"
+
         done <<< "${availableDatabases}"
+
+        echo -e "\e[33m Adding users... \n --- \e[0m"
 
         mysql_execute_query "
             SELECT u.User, u.authentication_string, db.db
             FROM mysql.db as db
             JOIN mysql.user as u ON (u.User = db.User)
             WHERE db.db IN (${databasesString})
-          " ${hostname} | while read username password database; do
+        " ${hostname} | while read username password database; do
 
                 proxysql_execute_query "
-                    INSERT INTO mysql_users (username, password, default_hostgroup, default_schema)
-                    VALUES ('${username}', '${password}', '${hostgroup}', '${database}');"
-
-            done
+                    INSERT INTO mysql_users (username, password, default_hostgroup, default_schema, schema_locked)
+                    VALUES ('${username}', '${password}', '${hostgroup}', '${database}', 1);"
 
         done
 
-    echo -e "\e[33mJoining cluster\e[0m"
+    done <<< "${servers}"
+
+    echo -e "\e[33m Setting default route group: ${newDefaultHostgroup} (${newDefaultHostgroupCount} database) \e[0m"
+
+    proxysql_execute_query  "
+        INSERT INTO mysql_query_rules (active,destination_hostgroup)
+        VALUES (1, '${newDefaultHostgroup}');"
 
     proxysql_execute_query "
         LOAD MYSQL VARIABLES TO RUN;
@@ -85,19 +120,22 @@ command_sync() {
 
     sleep 1
 
+    echo -e "\e[33m Joining cluster \e[0m"
+
     proxysql_execute_query "
         INSERT INTO proxysql_servers VALUES ('${IP}', 6032, 0, '${IP}');
         LOAD PROXYSQL SERVERS TO RUN;
     " "proxysql";
 
-    sleep 10
+    sleep 5
+
+    echo -e "\e[33m Leaving cluster \e[0m"
 
     proxysql_execute_query "
         DELETE FROM proxysql_servers WHERE hostname = '${IP}';
         LOAD PROXYSQL SERVERS TO RUN;
     " "proxysql";
 
-    sleep 5
-
-    echo -e "-- DONE --"
+    echo -e " -- DONE -- "
+    sleep 1
 }
