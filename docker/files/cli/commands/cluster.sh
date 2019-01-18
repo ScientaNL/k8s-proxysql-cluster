@@ -97,9 +97,9 @@ command_sync() {
             WHERE db.db IN (${databasesString})
         " ${hostname} | while read username password database; do
 
-                proxysql_execute_query "
-                    INSERT INTO mysql_users (username, password, default_hostgroup, default_schema)
-                    VALUES ('${username}', '${password}', '${hostgroup}', '${database}');"
+            proxysql_execute_query "
+                INSERT INTO mysql_users (username, password, default_schema)
+                VALUES ('${username}', '${password}', '${database}');"
 
         done
 
@@ -108,8 +108,8 @@ command_sync() {
     echo -e "\e[33m Setting default route group: ${newDefaultHostgroup} (${newDefaultHostgroupCount} database) \e[0m"
 
     proxysql_execute_query  "
-        INSERT INTO mysql_query_rules (active,destination_hostgroup)
-        VALUES (1, '${newDefaultHostgroup}');"
+        UPDATE mysql_users
+        SET default_hostgroup = '${newDefaultHostgroup}'"
 
     proxysql_execute_query "
         LOAD MYSQL VARIABLES TO RUN;
