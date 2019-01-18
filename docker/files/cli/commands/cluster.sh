@@ -71,7 +71,7 @@ command_sync() {
 
         databaseCount=$(wc -l <<< "${availableDatabases}")
 
-        if [[ ${newDefaultHostgroupCount} = -1 ||  databaseCount < newDefaultHostgroupCount ]]; then
+        if [[ ${newDefaultHostgroupCount} = -1 || $((databaseCount)) < $((newDefaultHostgroupCount)) ]]; then
             newDefaultHostgroupCount="${databaseCount}"
             newDefaultHostgroup="${hostgroup}"
         fi
