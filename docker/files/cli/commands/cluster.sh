@@ -71,9 +71,9 @@ command_sync() {
 
         databaseCount=$(wc -l <<< "${availableDatabases}")
 
-        if [[ ${newDefaultHostgroupCount} = -1 || $((databaseCount)) < $((newDefaultHostgroupCount)) ]]; then
-            newDefaultHostgroupCount="${databaseCount}"
-            newDefaultHostgroup="${hostgroup}"
+        if [[ ${newDefaultHostgroupCount} = -1 || $((newDefaultHostgroupCount)) < $((databaseCount)) ]]; then
+            newDefaultHostgroupCount=$((databaseCount))
+            newDefaultHostgroup=$((hostgroup))
         fi
 
         databasesString=$(echo "${availableDatabases}" | awk -vORS=, '{ print $1 }' | sed 's/,$/\n/')
