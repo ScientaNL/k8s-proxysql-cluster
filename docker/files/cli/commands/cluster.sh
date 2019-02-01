@@ -118,8 +118,8 @@ command_sync() {
         " ${hostname} | while read username password database; do
 
             proxysql_execute_query "
-                INSERT INTO mysql_users (username, password, default_schema)
-                VALUES ('${username}', '${password}', '${database}');" &> /dev/null
+                INSERT INTO mysql_users (username, password, default_schema, fast_forward)
+                VALUES ('${username}', '${password}', '${database}', 1);" &> /dev/null
 
             if [[ ${?} -eq 1 ]]; then
                 echo -e "Adding ${username}:${database} failed"
@@ -132,7 +132,7 @@ command_sync() {
     echo -e "\e[33m Setting default route group: ${newDefaultHostgroup} (${newDefaultHostgroupCount} database) \e[0m"
 
     proxysql_execute_query  "
-        UPDATE mysql_users SET default_hostgroup=${newDefaultHostgroup}, transaction_persistent=0
+        UPDATE mysql_users SET default_hostgroup=${newDefaultHostgroup}, transaction_persistent=0, fast_forward=0
         WHERE username = '${MYSQL_ADMIN_USERNAME}';"
 
     proxysql_execute_query "
