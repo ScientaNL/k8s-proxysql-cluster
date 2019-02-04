@@ -1,15 +1,18 @@
-FROM debian:stretch-slim
+FROM debian:jessie-slim
 LABEL maintainer="Scienta <info@scienta.nl>"
 
-ENV VERSION "2.0.0"
-ENV STATE "rc2"
-
+ENV VERSION "2.0.1"
 
 RUN apt-get update && \
-    apt-get install -y wget mysql-client bsdmainutils && \
-    wget https://github.com/sysown/proxysql/releases/download/v${VERSION}-${STATE}/proxysql-${STATE}_${VERSION}-debian9_amd64.deb -O /tmp/proxysql-${VERSION}-debian9_amd64.deb && \
-    dpkg -i /tmp/proxysql-${VERSION}-debian9_amd64.deb && \
-    rm -f /tmp/proxysql-${VERSION}-debian9_amd64.deb && \
+    apt-get install -y \
+    wget \
+    mysql-client \
+    openssl \
+    libev-dev \
+    bsdmainutils && \
+    wget https://github.com/sysown/proxysql/releases/download/v${VERSION}/proxysql_${VERSION}-debian8_amd64.deb -O /tmp/proxysql-${VERSION}-debian8_amd64.deb && \
+    dpkg -i /tmp/proxysql-${VERSION}-debian8_amd64.deb && \
+    rm -f /tmp/proxysql-${VERSION}-debian8_amd64.deb && \
     rm -rf /var/lib/apt/lists/*
 
 COPY ./files/proxysql-k8s-cluster.cnf /etc/proxysql.cnf
