@@ -119,7 +119,7 @@ command_sync() {
 
             proxysql_execute_query "
                 INSERT INTO mysql_users (username, password, default_schema, default_hostgroup, fast_forward)
-                VALUES ('${username}', '${password}', '${database}', '${hostgroup}' 1);" &> /dev/null
+                VALUES ('${username}', '${password}', '${database}', '${hostgroup}', 1);" &> /dev/null
 
             if [[ ${?} -eq 1 ]]; then
                 echo -e "Adding ${username}:${database} failed"
