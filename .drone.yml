@@ -17,7 +17,7 @@ pipeline:
     repo: scienta/k8s-proxysql-cluster
     dockerfile: ./docker/k8s-proxysql-cluster.Dockerfile
     context: ./docker/
-    tags: "tag-${DRONE_TAG}"
+    tags: "${DRONE_TAG}"
     secrets: [ docker_username, docker_password ]
     when:
       event: [tag]
