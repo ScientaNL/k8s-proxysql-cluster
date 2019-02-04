@@ -2,11 +2,11 @@
 
 readonly PROXYSQL_CLI_VERSION="1.0.0"
 
-: "${ADMIN_USERNAME:=cluster1}"
-: "${ADMIN_PASSWORD:=secret1pass}"
+: "${PROXYSQL_ADMIN_USERNAME:=cluster1}"
+: "${PROXYSQL_ADMIN_PASSWORD:=secret1pass}"
 
-: "${MONITOR_USERNAME:=user}"
-: "${MONITOR_PASSWORD:=pass}"
+: "${MYSQL_ADMIN_USERNAME:=user}"
+: "${MYSQL_ADMIN_PASSWORD:=pass}"
 
 IP=$(hostname -i)
 DIR=$(dirname "$(readlink -f "$0")")
