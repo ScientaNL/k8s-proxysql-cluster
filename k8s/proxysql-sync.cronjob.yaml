@@ -1,0 +1,30 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+
+metadata:
+  name: proxysql-sync
+
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: proxysql-sync
+              image: "scienta/k8s-proxysql-cluster:branch-v2.0.1"
+              imagePullPolicy: Always
+              args: ["--sync"]
+
+              volumeMounts:
+                - mountPath: /etc/proxysql.cnf
+                  name: proxysql
+                  subPath: proxysql.cnf
+
+          volumes:
+
+            - name: proxysql
+              configMap:
+                name: proxysql
+                defaultMode: 0777
