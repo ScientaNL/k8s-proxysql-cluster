@@ -25,7 +25,7 @@ spec:
     spec:
       restartPolicy: Always
       containers:
-        - image: "scienta/k8s-proxysql-cluster:branch-v2.0.0-test"
+        - image: "scienta/k8s-proxysql-cluster:branch-0.1"
           name: proxysql
           imagePullPolicy: Always
 

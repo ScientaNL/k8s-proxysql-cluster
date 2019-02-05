@@ -4,6 +4,11 @@ LABEL maintainer="Scienta <info@scienta.nl>"
 ENV VERSION "2.0.0"
 ENV STATE "rc2"
 
+ENV PROXYSQL_ADMIN_USERNAME cluster1
+ENV PROXYSQL_ADMIN_PASSWORD secret1pass
+
+ENV MYSQL_ADMIN_USERNAME root
+ENV MYSQL_ADMIN_PASSWORD password
 
 RUN apt-get update && \
     apt-get install -y wget mysql-client bsdmainutils && \
@@ -20,5 +25,5 @@ COPY ./files/data /var/lib/proxysql-data
 RUN ln -s /proxysql-cli/proxysql-cli.sh /usr/bin/proxysql-cli && \
     chmod +x -R /entrypoint.sh /proxysql-cli /etc/proxysql.cnf
 
-EXPOSE 6032 6033
+EXPOSE 6032 6033 6080
 ENTRYPOINT [ "/entrypoint.sh" ]
