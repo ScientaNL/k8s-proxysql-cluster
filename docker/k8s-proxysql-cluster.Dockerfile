@@ -15,9 +15,9 @@ RUN apt-get update && \
     mysql-client \
     libev-dev \
     bsdmainutils && \
-    wget https://github.com/sysown/proxysql/releases/download/v${PROXYSQL_VERSION}/proxysql_${PROXYSQL_VERSION}-debian8_amd64.deb -O /tmp/proxysql-${PROXYSQL_VERSION}-debian8_amd64.deb && \
-    dpkg -i /tmp/proxysql-${PROXYSQL_VERSION}-debian8_amd64.deb && \
-    rm -f /tmp/proxysql-${PROXYSQL_VERSION}-debian8_amd64.deb && \
+    wget https://github.com/sysown/proxysql/releases/download/v${PROXYSQL_VERSION}/proxysql_${PROXYSQL_VERSION}-debian9_amd64.deb -O /tmp/proxysql-${PROXYSQL_VERSION}-debian9_amd64.deb && \
+    dpkg -i /tmp/proxysql-${PROXYSQL_VERSION}-debian9_amd64.deb && \
+    rm -f /tmp/proxysql-${PROXYSQL_VERSION}-debian9_amd64.deb && \
     rm -rf /var/lib/apt/lists/*
 
 COPY ./files/proxysql-k8s-cluster.cnf /etc/proxysql.cnf
