@@ -118,8 +118,8 @@ command_sync() {
         " ${hostname} | while read username password database; do
 
             proxysql_execute_query "
-                INSERT INTO mysql_users (username, password, default_schema, default_hostgroup, fast_forward)
-                VALUES ('${username}', '${password}', '${database}', '${hostgroup}', 1);" &> /dev/null
+                INSERT INTO mysql_users (username, password, default_schema, default_hostgroup)
+                VALUES ('${username}', '${password}', '${database}', '${hostgroup}');" &> /dev/null
 
             if [[ ${?} -eq 1 ]]; then
                 echo -e "Adding ${username}:${database} failed"
