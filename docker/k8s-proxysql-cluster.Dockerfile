@@ -13,7 +13,6 @@ RUN apt-get update && \
     apt-get install -y \
     wget \
     mysql-client \
-    libev-dev \
     bsdmainutils && \
     wget https://github.com/sysown/proxysql/releases/download/v${PROXYSQL_VERSION}/proxysql_${PROXYSQL_VERSION}-debian9_amd64.deb -O /tmp/proxysql-${PROXYSQL_VERSION}-debian9_amd64.deb && \
     dpkg -i /tmp/proxysql-${PROXYSQL_VERSION}-debian9_amd64.deb && \
