@@ -2,6 +2,7 @@ FROM debian:jessie-slim
 LABEL maintainer="Scienta <info@scienta.nl>"
 
 ENV PROXYSQL_VERSION "2.0.1"
+ENV PROXYSQL_PACKAGE "-dbg-debian8"
 
 ENV PROXYSQL_ADMIN_USERNAME cluster1
 ENV PROXYSQL_ADMIN_PASSWORD secret1pass
@@ -19,9 +20,9 @@ RUN apt-get update && \
 	wget \
 	mysql-client \
 	bsdmainutils && \
-	wget https://github.com/sysown/proxysql/releases/download/v${PROXYSQL_VERSION}/proxysql_${PROXYSQL_VERSION}-debian8_amd64.deb -O /tmp/proxysql-${PROXYSQL_VERSION}-debian8_amd64.deb && \
-	dpkg -i /tmp/proxysql-${PROXYSQL_VERSION}-debian8_amd64.deb && \
-	rm -f /tmp/proxysql-${PROXYSQL_VERSION}-debian8_amd64.deb && \
+	wget https://github.com/sysown/proxysql/releases/download/v${PROXYSQL_VERSION}/proxysql_${PROXYSQL_VERSION}-${PROXYSQL_PACKAGE}_amd64.deb -O /tmp/proxysql-${PROXYSQL_VERSION}-${PROXYSQL_PACKAGE}_amd64.deb && \
+	dpkg -i /tmp/proxysql-${PROXYSQL_VERSION}-${PROXYSQL_PACKAGE}_amd64.deb && \
+	rm -f /tmp/proxysql-${PROXYSQL_VERSION}-${PROXYSQL_PACKAGE}_amd64.deb && \
 	rm -rf /var/lib/apt/lists/*
 
 COPY ./files/proxysql-k8s-cluster.cnf /etc/proxysql.cnf
