@@ -2,7 +2,7 @@ FROM debian:jessie-slim
 LABEL maintainer="Scienta <info@scienta.nl>"
 
 ENV PROXYSQL_VERSION "2.0.1"
-ENV PROXYSQL_PACKAGE "-dbg-debian8"
+ENV PROXYSQL_PACKAGE "dbg-debian8"
 
 ENV PROXYSQL_ADMIN_USERNAME cluster1
 ENV PROXYSQL_ADMIN_PASSWORD secret1pass
