@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxysql-heidi
+  labels:
+    app: proxysql
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+  - name: proxysql-heidi
+    nodePort: 30021
+    port: 6033
+    protocol: TCP
+    targetPort: 6033
+  selector:
+    app: proxysql
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}
