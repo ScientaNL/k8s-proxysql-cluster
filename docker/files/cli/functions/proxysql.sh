@@ -41,7 +41,7 @@ function proxysql_wait_for_admin() {
 }
 
 function proxysql_check_if_first() {
-    proxysql_execute_query "SELECT COUNT(*) FROM proxysql_servers WHERE hostname NOT IN ('proxysql', '${IP}')"
+    proxysql_execute_query "SELECT COUNT(*) FROM proxysql_servers WHERE hostname NOT IN ('${PROXYSQL_SERVICE}', '${IP}')"
 }
 
 function proxysql_wait_for_servers() {
@@ -49,7 +49,7 @@ function proxysql_wait_for_servers() {
     VERSION=${1}
     SLEEP=${2:-.2}
 
-    while [[ $(proxysql_execute_query "SELECT COUNT(*) FROM proxysql_servers WHERE hostname NOT IN ('proxysql', '${IP}')") -lt 1 ]]; do
+    while [[ $(proxysql_execute_query "SELECT COUNT(*) FROM proxysql_servers WHERE hostname NOT IN ('${PROXYSQL_SERVICE}', '${IP}')") -lt 1 ]]; do
         sleep ${SLEEP}
     done
 

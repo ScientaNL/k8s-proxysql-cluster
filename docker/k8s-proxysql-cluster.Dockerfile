@@ -3,6 +3,8 @@ LABEL maintainer="Scienta <info@scienta.nl>"
 
 ENV PROXYSQL_VERSION "1.4.14"
 
+ENV PROXYSQL_SERVICE proxysql
+
 ENV PROXYSQL_ADMIN_USERNAME cluster1
 ENV PROXYSQL_ADMIN_PASSWORD secret1pass
 
@@ -22,7 +24,6 @@ RUN apt-get update && \
 COPY ./files/proxysql-k8s-cluster.cnf /etc/proxysql.cnf
 COPY ./files/entrypoint.sh /entrypoint.sh
 COPY ./files/cli/ /proxysql-cli
-COPY ./files/data /var/lib/proxysql-data
 
 RUN ln -s /proxysql-cli/proxysql-cli.sh /usr/bin/proxysql-cli && \
     chmod +x -R /entrypoint.sh /proxysql-cli /etc/proxysql.cnf

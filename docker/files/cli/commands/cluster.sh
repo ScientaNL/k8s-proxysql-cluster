@@ -1,31 +1,30 @@
 #!/usr/bin/env bash
-
 commands_add "init" "Add this node to the cluster"
 command_init() {
 
     proxysql_wait_for_admin
-    proxysql_check_if_first
 
-    if [[ "${?}" -eq "1" ]]; then
+    sleep 5
+
+    isFirst=$(proxysql_check_if_first)
+
+    if [[ "${isFirst}" -eq "0" ]]; then
         MASTERSERVER="127.0.0.1"
     else
-        MASTERSERVER="proxysql"
+        MASTERSERVER="${PROXYSQL_SERVICE}"
     fi
-
-    proxysql_execute_query "
-        DELETE FROM proxysql_servers
-        WHERE hostname = 'proxysql';
-
-        INSERT INTO proxysql_servers VALUES ('${IP}', 6032, 0, '${IP}');
-        LOAD PROXYSQL SERVERS TO RUN;
-    "
 
     proxysql_execute_query "
         INSERT INTO proxysql_servers
         VALUES ('${IP}', 6032, 0, '${IP}');
-
         LOAD PROXYSQL SERVERS TO RUN;
     " ${MASTERSERVER}
+
+    proxysql_execute_query "
+        DELETE FROM proxysql_servers
+        WHERE hostname = '${PROXYSQL_SERVICE}';
+        LOAD PROXYSQL SERVERS TO RUN;
+    "
 
     touch /proxysql-ready
 }
@@ -59,6 +58,12 @@ commands_add "sync" "Synchronize from backends"
 command_sync() {
 
     proxysql_wait_for_admin
+
+    proxysql_execute_query "
+        DELETE FROM proxysql_servers
+        WHERE hostname = '${PROXYSQL_SERVICE}';
+        LOAD PROXYSQL SERVERS TO RUN;
+    ";
 
     newDefaultHostgroup=-1
     newDefaultHostgroupCount=-1
@@ -132,14 +137,8 @@ command_sync() {
     echo -e "\e[33m Setting default route group: ${newDefaultHostgroup} (${newDefaultHostgroupCount} database) \e[0m"
 
     proxysql_execute_query  "
-          INSERT INTO mysql_users (username, password, default_hostgroup, transaction_persistent, fast_forward)
-          VALUES ('${MYSQL_ADMIN_USERNAME}', '${MYSQL_ADMIN_PASSWORD}', '${newDefaultHostgroup}', 0, 0)
-          ON DUPLICATE KEY UPDATE
-              default_hostgroup = '${newDefaultHostgroup}',
-              password = '${MYSQL_ADMIN_PASSWORD}',
-              username = '${MYSQL_ADMIN_USERNAME}',
-              transaction_persistent = 0,
-              fast_forward = 0;" &> /dev/null
+        REPLACE INTO mysql_users (username, password, default_hostgroup, transaction_persistent, fast_forward)
+        VALUES ('${MYSQL_ADMIN_USERNAME}', '${MYSQL_ADMIN_PASSWORD}', '${newDefaultHostgroup}', 0, 0);"
 
     proxysql_execute_query "
         LOAD MYSQL VARIABLES TO RUN;
@@ -155,7 +154,7 @@ command_sync() {
     proxysql_execute_query "
         INSERT INTO proxysql_servers VALUES ('${IP}', 6032, 0, '${IP}');
         LOAD PROXYSQL SERVERS TO RUN;
-    " "proxysql";
+    " "${PROXYSQL_SERVICE}";
 
     sleep 5
 
@@ -164,7 +163,7 @@ command_sync() {
     proxysql_execute_query "
         DELETE FROM proxysql_servers WHERE hostname = '${IP}';
         LOAD PROXYSQL SERVERS TO RUN;
-    " "proxysql";
+    " "${PROXYSQL_SERVICE}";
 
     echo -e " -- DONE -- "
     sleep 1
