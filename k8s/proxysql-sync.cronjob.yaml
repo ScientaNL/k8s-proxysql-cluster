@@ -13,9 +13,21 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: proxysql-sync
-              image: "scienta/k8s-proxysql-cluster:branch-0.1"
+              image: "scienta/k8s-proxysql-cluster:0.1"
               imagePullPolicy: Always
               args: ["--sync"]
+
+              env:
+                - name: PROXYSQL_SERVICE
+                  value: proxysql-test
+                - name: MYSQL_ADMIN_USERNAME
+                  value: db_manager
+                - name: MYSQL_ADMIN_PASSWORD
+                  value: secretpassword
+                - name: PROXYSQL_ADMIN_USERNAME
+                  value: proxysql-admin
+                - name: PROXYSQL_ADMIN_PASSWORD
+                  value: adminpassw0rd
 
               volumeMounts:
                 - mountPath: /etc/proxysql.cnf
@@ -23,7 +35,6 @@ spec:
                   subPath: proxysql.cnf
 
           volumes:
-
             - name: proxysql
               configMap:
                 name: proxysql

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-
 readonly PROXYSQL_CLI_VERSION="1.0.0"
+
+: "${PROXYSQL_SERVICE:=proxysql}"
 
 : "${PROXYSQL_ADMIN_USERNAME:=cluster1}"
 : "${PROXYSQL_ADMIN_PASSWORD:=secret1pass}"
