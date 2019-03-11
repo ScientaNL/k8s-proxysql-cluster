@@ -10,9 +10,16 @@ command_init() {
 
     if [[ "${isFirst}" -eq "0" ]]; then
         MASTERSERVER="127.0.0.1"
+        command_sync 0
     else
         MASTERSERVER="${PROXYSQL_SERVICE}"
     fi
+
+    proxysql_execute_query "
+        DELETE FROM proxysql_servers
+        WHERE hostname = '${PROXYSQL_SERVICE}';
+        LOAD PROXYSQL SERVERS TO RUN;
+    "
 
     proxysql_execute_query "
         INSERT INTO proxysql_servers
@@ -20,11 +27,7 @@ command_init() {
         LOAD PROXYSQL SERVERS TO RUN;
     " ${MASTERSERVER}
 
-    proxysql_execute_query "
-        DELETE FROM proxysql_servers
-        WHERE hostname = '${PROXYSQL_SERVICE}';
-        LOAD PROXYSQL SERVERS TO RUN;
-    "
+    sleep 5
 
     touch /proxysql-ready
 }
@@ -90,6 +93,8 @@ command_sync() {
             WHERE SCHEMA_NAME NOT IN ('information_schema', 'performance_schema', 'sys')
         " ${hostname});
 
+        if [[ ${?} -eq 0 ]]; then
+
         databaseCount=$(wc -l <<< "${availableDatabases}")
 
         if [[ ${newDefaultHostgroupCount} = -1 || $((databaseCount)) < $((newDefaultHostgroupCount)) ]]; then
@@ -97,6 +102,7 @@ command_sync() {
             newDefaultHostgroup=$((hostgroup))
         fi
 
+        if [[ ${1} -eq 0 ]]; then
         databasesString=$(echo "${availableDatabases}" | awk -vORS=, '{ print $1 }' | sed 's/,$/\n/')
 
         echo -e "\e[33m Adding schema rules... \n --- \e[0m"
@@ -129,42 +135,47 @@ command_sync() {
             if [[ ${?} -eq 1 ]]; then
                 echo -e "Adding ${username}:${database} failed"
             fi
-
         done
-
+        fi
+        fi
     done <<< "${servers}"
 
-    echo -e "\e[33m Setting default route group: ${newDefaultHostgroup} (${newDefaultHostgroupCount} database) \e[0m"
 
-    proxysql_execute_query  "
-        REPLACE INTO mysql_users (username, password, default_hostgroup, transaction_persistent, fast_forward)
-        VALUES ('${MYSQL_ADMIN_USERNAME}', '${MYSQL_ADMIN_PASSWORD}', '${newDefaultHostgroup}', 0, 0);"
+    if [[ ${newDefaultHostgroupCount} -ne -1 ]]; then
+        echo -e "\e[33m Setting default route group: ${newDefaultHostgroup} (${newDefaultHostgroupCount} database) \e[0m"
+        proxysql_execute_query  "
+            REPLACE INTO mysql_users (username, password, default_hostgroup, transaction_persistent, fast_forward)
+            VALUES ('${MYSQL_ADMIN_USERNAME}', '${MYSQL_ADMIN_PASSWORD}', '${newDefaultHostgroup}', 0, 0);"
 
-    proxysql_execute_query "
-        LOAD MYSQL VARIABLES TO RUN;
-        LOAD MYSQL QUERY RULES TO RUN;
-        LOAD MYSQL USERS TO RUN;
-        LOAD MYSQL SERVERS TO RUN;
-        LOAD ADMIN VARIABLES TO RUN;";
+        proxysql_execute_query "
+            LOAD MYSQL VARIABLES TO RUN;
+            LOAD MYSQL QUERY RULES TO RUN;
+            LOAD MYSQL USERS TO RUN;
+            LOAD MYSQL SERVERS TO RUN;
+            LOAD ADMIN VARIABLES TO RUN;";
+    else
+        echo -e "No suitable database found! Check your config"
+    fi
 
     sleep 1
 
-    echo -e "\e[33m Joining cluster \e[0m"
+    if [[ ${1} -eq 1 ]]; then
+        echo -e "\e[33m Joining cluster \e[0m"
 
-    proxysql_execute_query "
-        INSERT INTO proxysql_servers VALUES ('${IP}', 6032, 0, '${IP}');
-        LOAD PROXYSQL SERVERS TO RUN;
-    " "${PROXYSQL_SERVICE}";
+        proxysql_execute_query "
+            INSERT INTO proxysql_servers VALUES ('${IP}', 6032, 0, '${IP}');
+            LOAD PROXYSQL SERVERS TO RUN;
+        " "${PROXYSQL_SERVICE}";
 
-    sleep 5
+        sleep 5
 
-    echo -e "\e[33m Leaving cluster \e[0m"
+        echo -e "\e[33m Leaving cluster \e[0m"
 
-    proxysql_execute_query "
-        DELETE FROM proxysql_servers WHERE hostname = '${IP}';
-        LOAD PROXYSQL SERVERS TO RUN;
-    " "${PROXYSQL_SERVICE}";
-
+        proxysql_execute_query "
+            DELETE FROM proxysql_servers WHERE hostname = '${IP}';
+            LOAD PROXYSQL SERVERS TO RUN;
+        " "${PROXYSQL_SERVICE}";
+    fi
     echo -e " -- DONE -- "
     sleep 1
 }
