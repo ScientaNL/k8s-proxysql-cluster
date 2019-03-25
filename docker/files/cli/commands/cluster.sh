@@ -39,7 +39,7 @@ command_query() {
 
 commands_add "query:users" "show mysql_users"
 command_query:users() {
-    proxysql_execute_query_hr "SELECT username, password,  FROM mysql_users"
+    proxysql_execute_query_hr "SELECT username, password, default_schema, default_hostgroup FROM mysql_users"
 }
 
 commands_add "query:servers" "show mysql_servers"
