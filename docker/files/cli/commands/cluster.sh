@@ -18,8 +18,9 @@ command_init() {
     proxysql_execute_query "
         DELETE FROM proxysql_servers
         WHERE hostname = '${PROXYSQL_SERVICE}';
-        LOAD PROXYSQL SERVERS TO RUN;
     "
+
+    sleep 3
 
     proxysql_execute_query "
         INSERT INTO proxysql_servers
