@@ -53,7 +53,7 @@ command_query:rules() {
     proxysql_execute_query_hr "SELECT * FROM mysql_query_rules"
 }
 
-commands_add "show:nodes" "Show al the nodes of the cluster"
+commands_add "query:nodes" "Show al the nodes of the cluster"
 command_query:nodes() {
     proxysql_execute_query_hr "SELECT * FROM proxysql_servers;"
 }
