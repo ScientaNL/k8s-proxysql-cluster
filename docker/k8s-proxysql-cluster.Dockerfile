@@ -28,5 +28,7 @@ COPY ./files/cli/ /proxysql-cli
 RUN ln -s /proxysql-cli/proxysql-cli.sh /usr/bin/proxysql-cli && \
     chmod +x -R /entrypoint.sh /proxysql-cli /etc/proxysql.cnf
 
+ENV CONFIG_TEMPLATE ""
+
 EXPOSE 6032 6033 6080
 ENTRYPOINT [ "/entrypoint.sh" ]
