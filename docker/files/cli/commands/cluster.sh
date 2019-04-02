@@ -60,6 +60,8 @@ command_query:nodes() {
 
 commands_add "sync" "Synchronize from backends"
 command_sync() {
+    local joinExistingCluster=${1};
+    local resetDefaultHostgroup="${2:-1}" # set default value to 1
 
     proxysql_wait_for_admin
 
@@ -96,71 +98,75 @@ command_sync() {
 
         if [[ ${?} -eq 0 ]]; then
 
-        databaseCount=$(wc -l <<< "${availableDatabases}")
+            databaseCount=$(wc -l <<< "${availableDatabases}")
 
-        if [[ ${newDefaultHostgroupCount} = -1 || $((databaseCount)) < $((newDefaultHostgroupCount)) ]]; then
-            newDefaultHostgroupCount=$((databaseCount))
-            newDefaultHostgroup=$((hostgroup))
-        fi
-
-        if [[ ${1} -eq 0 ]]; then
-        databasesString=$(echo "${availableDatabases}" | awk -vORS=, '{ print $1 }' | sed 's/,$/\n/')
-
-        echo -e "\e[33m Adding schema rules... \n --- \e[0m"
-
-        proxysql_execute_query  "
-            INSERT INTO mysql_query_rules (active, match_pattern, destination_hostgroup, apply )
-            VALUES (1, '\/\*.*\s*hg\s*=\s*${hostgroup}\s*.*\*\/', '${hostgroup}', 1);"
-
-        while read database; do
-
-            proxysql_execute_query  "
-                INSERT INTO mysql_query_rules (active, schemaname, destination_hostgroup, apply )
-                VALUES (1, ${database}, '${hostgroup}', 1);"
-
-        done <<< "${availableDatabases}"
-
-        echo -e "\e[33m Adding users... \n --- \e[0m"
-
-        mysql_execute_query "
-            SELECT u.User, u.authentication_string, db.db
-            FROM mysql.db as db
-            JOIN mysql.user as u ON (u.User = db.User)
-            WHERE db.db IN (${databasesString})
-        " ${hostname} | while read username password database; do
-
-            proxysql_execute_query "
-                INSERT INTO mysql_users (username, password, default_schema, default_hostgroup)
-                VALUES ('${username}', '${password}', '${database}', '${hostgroup}');" &> /dev/null
-
-            if [[ ${?} -eq 1 ]]; then
-                echo -e "Adding ${username}:${database} failed"
+            if [[ ${newDefaultHostgroupCount} = -1 || $((databaseCount)) < $((newDefaultHostgroupCount)) ]]; then
+                newDefaultHostgroupCount=$((databaseCount))
+                newDefaultHostgroup=$((hostgroup))
             fi
-        done
-        fi
+
+            if [[ ${joinExistingCluster} -eq 0 ]]; then
+                databasesString=$(echo "${availableDatabases}" | awk -vORS=, '{ print $1 }' | sed 's/,$/\n/')
+
+                echo -e "\e[33m Adding schema rules... \n --- \e[0m"
+
+                proxysql_execute_query  "
+                    INSERT INTO mysql_query_rules (active, match_pattern, destination_hostgroup, apply )
+                    VALUES (1, '\/\*.*\s*hg\s*=\s*${hostgroup}\s*.*\*\/', '${hostgroup}', 1);"
+
+                while read database; do
+
+                    proxysql_execute_query  "
+                        INSERT INTO mysql_query_rules (active, schemaname, destination_hostgroup, apply )
+                        VALUES (1, ${database}, '${hostgroup}', 1);"
+
+                done <<< "${availableDatabases}"
+
+                echo -e "\e[33m Adding users... \n --- \e[0m"
+
+                mysql_execute_query "
+                    SELECT u.User, u.authentication_string, db.db
+                    FROM mysql.db as db
+                    JOIN mysql.user as u ON (u.User = db.User)
+                    WHERE db.db IN (${databasesString})
+                " ${hostname} | while read username password database; do
+
+                    proxysql_execute_query "
+                        INSERT INTO mysql_users (username, password, default_schema, default_hostgroup)
+                        VALUES ('${username}', '${password}', '${database}', '${hostgroup}');" &> /dev/null
+
+                    if [[ ${?} -eq 1 ]]; then
+                        echo -e "Adding ${username}:${database} failed"
+                    fi
+                done
+            fi
         fi
     done <<< "${servers}"
 
 
-    if [[ ${newDefaultHostgroupCount} -ne -1 ]]; then
-        echo -e "\e[33m Setting default route group: ${newDefaultHostgroup} (${newDefaultHostgroupCount} database) \e[0m"
-        proxysql_execute_query  "
-            REPLACE INTO mysql_users (username, password, default_hostgroup, transaction_persistent, fast_forward)
-            VALUES ('${MYSQL_ADMIN_USERNAME}', '${MYSQL_ADMIN_PASSWORD}', '${newDefaultHostgroup}', 0, 0);"
+    if [[ ${resetDefaultHostgroup} -eq 1 ]]; then
+        if [[ ${newDefaultHostgroupCount} -ne -1 ]]; then
+            echo -e "\e[33m Setting default hostgroup for ${MYSQL_ADMIN_USERNAME}: ${newDefaultHostgroup} (${newDefaultHostgroupCount} databases) \e[0m"
+            proxysql_execute_query  "
+                REPLACE INTO mysql_users (username, password, default_hostgroup, transaction_persistent, fast_forward)
+                VALUES ('${MYSQL_ADMIN_USERNAME}', '${MYSQL_ADMIN_PASSWORD}', '${newDefaultHostgroup}', 0, 0);"
 
-        proxysql_execute_query "
-            LOAD MYSQL VARIABLES TO RUN;
-            LOAD MYSQL QUERY RULES TO RUN;
-            LOAD MYSQL USERS TO RUN;
-            LOAD MYSQL SERVERS TO RUN;
-            LOAD ADMIN VARIABLES TO RUN;";
+            proxysql_execute_query "
+                LOAD MYSQL VARIABLES TO RUN;
+                LOAD MYSQL QUERY RULES TO RUN;
+                LOAD MYSQL USERS TO RUN;
+                LOAD MYSQL SERVERS TO RUN;
+                LOAD ADMIN VARIABLES TO RUN;";
+        else
+            echo -e "No suitable database found! Check your config"
+        fi
     else
-        echo -e "No suitable database found! Check your config"
+        echo -e "Not replacing the default hostgroup for ${MYSQL_ADMIN_USERNAME}"
     fi
 
     sleep 1
 
-    if [[ ${1} -eq 1 ]]; then
+    if [[ ${joinExistingCluster} -eq 1 ]]; then
         echo -e "\e[33m Joining cluster \e[0m"
 
         proxysql_execute_query "
