@@ -38,7 +38,7 @@ mysql:
 
 # Enable sync cronjob
 cronjob:
-  enabled: true
+  enabled: false
 
 # Resource requests and limits
 resources: {}
