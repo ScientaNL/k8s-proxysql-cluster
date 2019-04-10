@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    app: {{ template "fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+data:
+  proxysql.cnf: |
+    datadir="{{ .Values.proxysql.dataDir }}"
+
+    admin_variables =
+    {
+      admin_credentials="{{ .Values.proxysql.admin.username}}:{{ .Values.proxysql.admin.password }};{{ .Values.proxysql.clusterAdmin.username }}:{{ .Values.proxysql.clusterAdmin.password }}"
+      cluster_username="{{ .Values.proxysql.clusterAdmin.username }}"
+      cluster_password="{{ .Values.proxysql.clusterAdmin.password }}"
+      cluster_check_interval_ms=10
+      cluster_check_status_frequency=100
+      mysql_ifaces="{{ .Values.proxysql.admin.iface }}:{{ .Values.proxysql.admin.port }}"
+      {{- if .Values.proxysql.queryCacheSizeMb }}
+      query_cache_size_MB="{{ .Values.proxysql.queryCacheSizeMb }}"
+      {{- end }}
+      web_enabled={{ .Values.proxysql.webEnabled }}
+    }
+
+    mysql_variables =
+    {
+        threads=4
+        max_connections=2048
+        default_query_delay=0
+        default_query_timeout=36000000
+        {{- if .Values.proxysql.queryCacheSizeMb }}
+        query_cache_size_MB="{{ .Values.proxysql.queryCacheSizeMb }}"
+        {{- end }}
+        have_compress=true
+        poll_timeout=2000
+        interfaces="{{ .Values.mysql.iface }}:{{ .Values.mysql.port }};/tmp/proxysql.sock"
+        stacksize=1048576
+        connect_timeout_server=60000
+        monitor_username="{{ .Values.mysql.monitor.username }}"
+        monitor_password="{{ .Values.mysql.monitor.password }}"
+        monitor_history=600000
+        monitor_connect_interval=10000
+        monitor_ping_interval=2000
+        commands_stats=true
+        sessions_sort=true
+    }
+
+    proxysql_servers =
+    (
+        {
+            hostname="{{ template "fullname" . }}"
+            port={{ .Values.proxysql.admin.port }}
+            weight=0
+            comment="discovery"
+        }
+    )

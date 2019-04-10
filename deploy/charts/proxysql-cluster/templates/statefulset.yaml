@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    app: {{ template "fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  replicas: {{ .Values.numReplicas }}
+  serviceName: {{ template "fullname" . }}
+  updateStrategy:
+    type: OnDelete
+  selector:
+    matchLabels:
+      app: {{ template "fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "fullname" . }}
+    spec:
+      restartPolicy: Always
+      containers:
+        - image: {{ .Values.image | quote }}
+          name: proxysql
+          imagePullPolicy: "Always"
+          ports:
+            - containerPort: {{ .Values.mysql.port }}
+              name: proxysql-mysql
+            - containerPort: {{ .Values.proxysql.admin.port }}
+              name: proxysql-admin
+          env:
+            - name: PROXYSQL_SERVICE
+              value: {{ template "fullname" . }}
+            - name: MYSQL_ADMIN_USERNAME
+              value: {{ .Values.mysql.admin.username }}
+            - name: MYSQL_ADMIN_PASSWORD
+              value: {{ .Values.mysql.admin.password }}
+            - name: PROXYSQL_ADMIN_USERNAME
+              value: {{ .Values.proxysql.clusterAdmin.username }}
+            - name: PROXYSQL_ADMIN_PASSWORD
+              value: {{ .Values.proxysql.clusterAdmin.password }}
+          readinessProbe:
+            initialDelaySeconds: 0
+            periodSeconds: 1
+            exec:
+              command:
+                - cat
+                - /proxysql-ready
+          args: [ "--cluster" ]
+          volumeMounts:
+            - mountPath: /etc/proxysql.cnf
+              name: proxysql
+              subPath: proxysql.cnf
+          {{ if .Values.resources }}
+          resources:
+{{ .Values.resources | indent 12 }}
+          {{ end }}
+      volumes:
+        - name: proxysql
+          configMap:
+            name: {{ template "fullname" . }}
+            defaultMode: 0777
+      {{ if .Values.tolerations }}
+      tolerations:
+{{ .Values.tolerations | indent 8 }}
+      {{ end }}
