@@ -1,7 +1,7 @@
 # values.yaml
 
 # Docker image to use for deployment
-image: "scienta/k8s-proxysql-cluster:branch-0.1"
+image: "scienta/k8s-proxysql-cluster:1.0.0"
 
 # Default number of ProxySQL replicas
 numReplicas: 3
