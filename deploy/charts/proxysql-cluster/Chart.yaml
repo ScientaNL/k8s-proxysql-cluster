@@ -10,6 +10,8 @@ home: http://www.proxysql.com/
 sources:
 - https://github.com/sysown/proxysql
 maintainers:
+- name: Jasper de Jager
+  email: jasper@scienta.nl
 - name: Tim Mirecki
   email: tim@carpages.ca
 engine: gotpl
