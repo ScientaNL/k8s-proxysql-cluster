@@ -1,0 +1,9 @@
+ProxySQL admin can be accessed via port {{ .Values.proxysql.admin.port }} from within the cluster:
+{{ template "fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+
+To connect to a ProxySQL instance:
+
+    $ kubectl exec -ti {{ template "fullname" . }}-0 -- mysql -u {{ .Values.proxysql.admin.username }} \
+        -h127.0.0.1 \
+        -p{{ .Values.proxysql.admin.password }} \
+        -P{{ .Values.proxysql.admin.port }}

@@ -1,20 +1,35 @@
 FROM debian:stretch-slim
 LABEL maintainer="Scienta <info@scienta.nl>"
 
-ENV TAG "1.4.13"
+ENV PROXYSQL_VERSION "1.4.14"
+
+ENV PROXYSQL_SERVICE proxysql
+
+ENV PROXYSQL_ADMIN_USERNAME cluster1
+ENV PROXYSQL_ADMIN_PASSWORD secret1pass
+
+ENV MYSQL_ADMIN_USERNAME root
+ENV MYSQL_ADMIN_PASSWORD password
 
 RUN apt-get update && \
-    apt-get install -y wget mysql-client && \
-    wget https://github.com/sysown/proxysql/releases/download/v${TAG}/proxysql_${TAG}-debian9_amd64.deb -O /tmp/proxysql.deb && \
-    dpkg -i /tmp/proxysql.deb && \
-    rm -f /tmp/proxysql.deb && \
+    apt-get install -y \
+    wget \
+    mysql-client \
+    gettext-base \
+    bsdmainutils && \
+    wget https://github.com/sysown/proxysql/releases/download/v${PROXYSQL_VERSION}/proxysql_${PROXYSQL_VERSION}-debian9_amd64.deb -O /tmp/proxysql-${PROXYSQL_VERSION}-debian9_amd64.deb && \
+    dpkg -i /tmp/proxysql-${PROXYSQL_VERSION}-debian9_amd64.deb && \
+    rm -f /tmp/proxysql-${PROXYSQL_VERSION}-debian9_amd64.deb && \
     rm -rf /var/lib/apt/lists/*
 
-COPY ./files/init-k8s-cluster.sh /init-k8s-cluster.sh
-COPY ./files/proxysql-k8s-cluster.cnf /proxysql-k8s-cluster.cnf
+COPY ./files/proxysql-k8s-cluster.cnf /etc/proxysql.cnf
 COPY ./files/entrypoint.sh /entrypoint.sh
+COPY ./files/cli/ /proxysql-cli
 
-RUN chmod +x /entrypoint.sh /init-k8s-cluster.sh
+RUN ln -s /proxysql-cli/proxysql-cli.sh /usr/bin/proxysql-cli && \
+    chmod +x -R /entrypoint.sh /proxysql-cli /etc/proxysql.cnf
 
-EXPOSE 6032 6033
+ENV CONFIG_TEMPLATE ""
+
+EXPOSE 6032 6033 6080
 ENTRYPOINT [ "/entrypoint.sh" ]
