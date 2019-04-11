@@ -1,0 +1,54 @@
+# values.yaml
+
+# Docker image to use for deployment
+image: "scienta/k8s-proxysql-cluster:branch-0.1"
+
+# Default number of ProxySQL replicas
+numReplicas: 3
+
+# Default admin username
+proxysql:
+  admin:
+    username: admin
+    password: admin
+    # Connect on this port to administer ProxySQL, view stats, etc.
+    iface: "0.0.0.0"
+    port: 6032
+  clusterAdmin:
+    username: cluster1
+    password: secret1pass
+  # Query Cache Size
+  queryCacheSizeMb: 256
+  # ProxySQL needs a cluster name
+  dataDir: "/var/lib/proxysql"
+  webEnabled: true
+
+# MySQL Settings
+mysql:
+  # Applications connect on this port to run queries
+  iface: "0.0.0.0"
+  port: 3306
+  # This is the monitor user, just needs usage rights on the databases
+  monitor:
+    username: monitor
+    password: monitor
+  admin:
+    username: root
+    password: insecurepassword
+
+# Enable sync cronjob
+cronjob:
+  enabled: false
+
+# Resource requests and limits
+resources: {}
+#resources:
+#  requests:
+#    memory: "128Mi"
+#    cpu: "100m"
+#  limits:
+#    memory: "512Mi"
+#    cpu: "500m"
+
+# Optional tolerations
+tolerations: {}

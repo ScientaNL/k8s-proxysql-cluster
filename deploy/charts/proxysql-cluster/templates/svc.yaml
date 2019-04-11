@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    app: {{ template "fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.proxysql.admin.port }}
+      protocol: TCP
+      name: proxysql-admin
+    - port: {{ .Values.mysql.port }}
+      protocol: TCP
+      name: proxysql-sql
+  selector:
+    app: {{ template "fullname" . }}

@@ -1,0 +1,43 @@
+{{ if .Values.cronjob.enabled }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ template "fullname" . }}-sync
+  labels:
+    app: {{ template "fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: proxysql-sync
+              image: {{ .Values.image | quote }}
+              imagePullPolicy: Always
+              args: ["--sync"]
+              env:
+                - name: PROXYSQL_SERVICE
+                  value: {{ template "fullname" . }}
+                - name: MYSQL_ADMIN_USERNAME
+                  value: {{ .Values.mysql.admin.username }}
+                - name: MYSQL_ADMIN_PASSWORD
+                  value: {{ .Values.mysql.admin.password }}
+                - name: PROXYSQL_ADMIN_USERNAME
+                  value: {{ .Values.proxysql.clusterAdmin.username }}
+                - name: PROXYSQL_ADMIN_PASSWORD
+                  value: {{ .Values.proxysql.clusterAdmin.password }}
+              volumeMounts:
+                - mountPath: /etc/proxysql.cnf
+                  name: proxysql
+                  subPath: proxysql.cnf
+          volumes:
+            - name: proxysql
+              configMap:
+                name: {{ template "fullname" . }}
+                defaultMode: 0777
+{{ end }}

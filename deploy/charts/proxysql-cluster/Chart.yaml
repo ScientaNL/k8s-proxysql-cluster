@@ -1,0 +1,15 @@
+name: proxysql-cluster
+version: 0.1.0
+description: Chart for ProxySQL Cluster
+keywords:
+- mysql
+- database
+- proxysql
+- cluster
+home: http://www.proxysql.com/
+sources:
+- https://github.com/sysown/proxysql
+maintainers:
+- name: Tim Mirecki
+  email: tim@carpages.ca
+engine: gotpl
