@@ -22,7 +22,7 @@ spec:
     spec:
       restartPolicy: Always
       containers:
-        - image: {{ .Values.image | quote }}
+        - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           name: proxysql
           imagePullPolicy: "Always"
           ports:

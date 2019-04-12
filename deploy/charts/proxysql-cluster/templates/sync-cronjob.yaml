@@ -17,7 +17,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: proxysql-sync
-              image: {{ .Values.image | quote }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
               imagePullPolicy: Always
               args: ["--sync"]
               env:

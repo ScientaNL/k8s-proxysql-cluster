@@ -1,7 +1,9 @@
 # values.yaml
 
 # Docker image to use for deployment
-image: "scienta/k8s-proxysql-cluster:1.0.0"
+image:
+  repository: "scienta/k8s-proxysql-cluster"
+  tag: "1.0.0"
 
 # Default number of ProxySQL replicas
 numReplicas: 3
@@ -18,7 +20,7 @@ proxysql:
     username: cluster1
     password: secret1pass
   # Query Cache Size
-  queryCacheSizeMb: 256
+  # queryCacheSizeMb: 256
   # ProxySQL needs a cluster name
   dataDir: "/var/lib/proxysql"
   webEnabled: true

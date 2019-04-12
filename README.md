@@ -26,6 +26,39 @@ use the following command to use the statefulset in kubernetes
 ```
 kubectl create -f ./k8s/proxysql.statefulset.yaml
 ``` 
+
+## Helm Install
+
+You can install using the helm repository using the following command:
+
+```bash
+helm install --name db-proxy deploy/charts/proxysql-cluster 
+```
+
+| Parameter | Description | Default |
+|----|-----------|-------------|
+| `image.repository` | `proxysql` image repo | `scienta/k8s-proxysql-cluster` |
+| `image.tag` | `proxysql` image tag | `1.0.0` |
+| `numReplicas` | Number of replicas to create in StatefulSet | `3` |
+| `proxysql.admin.username` | Admin username for `proxysql` | `admin` |
+| `proxysql.admin.password` | Admin password for `proxysql` | `admin` |
+| `proxysql.admin.iface` | Listen network for `proxysql` service | `0.0.0.0` |
+| `proxysql.admin.port` | Listen port for `proxysql` service | `6032` |
+| `proxysql.clusterAdmin.username` | Cluster user username used by `proxysql` nodes to sync | `cluster1` |
+| `proxysql.clusterAdmin.password` | Cluster user password used by `proxysql` nodes to sync | `secret1pass` |
+| `proxysql.queryCacheSizeMb` | (Optional) Query cache size | `nil` |
+| `proxysql.dataDir` | Directory to store `proxysql` tables, etc. | `/var/lib/proxysql` |
+| `proxysql.webEnabled` | Enable `proxysql` web dashboard | `true` |
+| `mysql.iface` | Listen network for `mysql` service connections | `0.0.0.0` |
+| `mysql.port` | Listen port fo `mysql` service connections | `3306` |
+| `mysql.monitor.username` | Monitor username on MySQL instances for `proxysql` health checks | `monitor` |
+| `mysql.monitor.password` | Monitor password on MySQL instances for `proxysql` health checks | `monitor` |
+| `mysql.admin.username` | Root / admin username on MySQL instances | `root` |
+| `mysql.admin.password` | Root / admin password on MySQL instances | `insecurepassword` |
+| `cronjob.enabled` | Enable k8s `CronJob` to sync `proxysql` configurations | `false` |
+| `resources` | CPU / Memory Limits and Requests | `{}` |
+| `tolerations` | Pod tolerations | '{}' |
+
 ## Workings
 When the container is run with the --k8s-cluster argument the following happens:
 - the container checks if there is a node available at the proxysql service
