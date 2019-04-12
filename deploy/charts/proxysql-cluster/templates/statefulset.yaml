@@ -53,6 +53,13 @@ spec:
             - mountPath: /etc/proxysql.cnf
               name: proxysql
               subPath: proxysql.cnf
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/bash
+                  - -c
+                  - "/usr/bin/proxysql-cli remove"
           {{ if .Values.resources }}
           resources:
 {{ .Values.resources | indent 12 }}

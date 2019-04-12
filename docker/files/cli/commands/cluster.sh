@@ -53,9 +53,18 @@ command_query:rules() {
     proxysql_execute_query_hr "SELECT * FROM mysql_query_rules"
 }
 
-commands_add "query:nodes" "Show al the nodes of the cluster"
+commands_add "query:nodes" "Show all the nodes of the cluster"
 command_query:nodes() {
     proxysql_execute_query_hr "SELECT * FROM proxysql_servers;"
+}
+
+commands_add "remove" "Remove this node from the cluster"
+command_remove() {
+    proxysql_execute_query_hr "
+        DELETE FROM proxysql_servers
+        WHERE hostname = '${IP}';
+        LOAD PROXYSQL SERVERS TO RUN;
+    " ${PROXYSQL_SERVICE}
 }
 
 commands_add "sync" "Synchronize from backends"
