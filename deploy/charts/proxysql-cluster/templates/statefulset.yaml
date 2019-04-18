@@ -62,7 +62,7 @@ spec:
                   - "/usr/bin/proxysql-cli remove"
           {{ if .Values.resources }}
           resources:
-{{ .Values.resources | indent 12 }}
+{{ toYaml .Values.resources | indent 12 }}
           {{ end }}
       volumes:
         - name: proxysql
@@ -71,5 +71,5 @@ spec:
             defaultMode: 0777
       {{ if .Values.tolerations }}
       tolerations:
-{{ .Values.tolerations | indent 8 }}
+{{ toYaml .Values.tolerations | indent 8 }}
       {{ end }}
