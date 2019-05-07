@@ -67,8 +67,8 @@ command_remove() {
     " ${PROXYSQL_SERVICE}
 }
 
-commands_add "sync:default_hostgroup" "Synchronize the default hostgroup from backends to the cluster"
-command_sync:default_hostgroup() {
+commands_add "sync:default-hostgroup" "Synchronize the default hostgroup from backends to the cluster"
+command_sync:default-hostgroup() {
     newDefaultHostgroup=-1
     newDefaultHostgroupCount=-1
 
