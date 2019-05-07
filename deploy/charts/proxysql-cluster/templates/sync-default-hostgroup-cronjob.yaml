@@ -2,7 +2,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: {{ template "fullname" . }}-sync-default_hostgroup
+  name: {{ template "fullname" . }}-sync-default-hostgroup
   labels:
     app: {{ template "fullname" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
@@ -16,11 +16,11 @@ spec:
         spec:
           restartPolicy: OnFailure
           containers:
-            - name: proxysql-sync-default_hostgroup
+            - name: proxysql-sync-default-hostgroup
               image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
               imagePullPolicy: Always
               command: ["proxysql-cli"]
-              args: ["sync:default_hostgroup"]
+              args: ["sync:default-hostgroup"]
               env:
                 - name: PROXYSQL_SERVICE
                   value: {{ template "fullname" . }}

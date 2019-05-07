@@ -2,7 +2,7 @@ apiVersion: batch/v1beta1
 kind: CronJob
 
 metadata:
-  name: proxysql-sync-default_hostgroup
+  name: proxysql-sync-default-hostgroup
 
 spec:
   schedule: "*/5 * * * *"
@@ -12,11 +12,11 @@ spec:
         spec:
           restartPolicy: OnFailure
           containers:
-            - name: proxysql-sync-default_hostgroup
+            - name: proxysql-sync-default-hostgroup
               image: "scienta/k8s-proxysql-cluster:1.0.0"
               imagePullPolicy: Always
               command: ["proxysql-cli"]
-              args: ["sync:default_hostgroup"]
+              args: ["sync:default-hostgroup"]
 
               env:
                 - name: PROXYSQL_SERVICE
