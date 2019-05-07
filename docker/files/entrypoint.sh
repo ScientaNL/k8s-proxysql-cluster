@@ -9,9 +9,9 @@ fi
 if [[ "${1}" = "--cluster" ]]; then
     proxysql-cli init &
 	set -- proxysql -f --initial
-elif [[ "${1}" = "--sync" ]]; then
+elif [[ "${1}" = "--sync_cluster" ]]; then
 	proxysql -f --initial &> /dev/null &
-	set -- proxysql-cli sync
+	set -- proxysql-cli sync:cluster
 else
 	set -- proxysql -f "$@"
 fi

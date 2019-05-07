@@ -10,7 +10,7 @@ command_init() {
 
     if [[ "${isFirst}" -eq "0" ]]; then
         MASTERSERVER="127.0.0.1"
-        command_sync 0
+        command_sync:node
     else
         MASTERSERVER="${PROXYSQL_SERVICE}"
     fi
@@ -33,7 +33,7 @@ command_init() {
     touch /proxysql-ready
 }
 
-commands_add "query [QUERY]" "perform mysql query on the cluster"
+commands_add "query" "[QUERY] perform mysql query on the cluster"
 command_query() {
     proxysql_execute_query_hr "$1"
 }
@@ -67,9 +67,59 @@ command_remove() {
     " ${PROXYSQL_SERVICE}
 }
 
-commands_add "sync" "Synchronize from backends"
-command_sync() {
-    local joinExistingCluster=${1};
+commands_add "sync:default_hostgroup" "Synchronize the default hostgroup from backends to the cluster"
+command_sync:default_hostgroup() {
+    newDefaultHostgroup=-1
+    newDefaultHostgroupCount=-1
+
+    servers=$(proxysql_execute_query "
+        SELECT hostname, hostgroup_id
+        FROM mysql_servers
+        WHERE hostgroup_id NOT IN (
+            SELECT reader_hostgroup
+            FROM mysql_replication_hostgroups
+        ) OR hostgroup_id IN (
+            SELECT writer_hostgroup
+            FROM mysql_replication_hostgroups
+        )
+    ");
+
+    while read hostname hostgroup; do
+
+        echo -e "\e[33m Server: ${hostname} \n --- \e[0m"
+
+        availableDatabases=$(mysql_execute_query "
+            SELECT QUOTE(SCHEMA_NAME)
+            FROM INFORMATION_SCHEMA.SCHEMATA
+            WHERE SCHEMA_NAME NOT IN ('information_schema', 'performance_schema', 'sys')
+        " ${hostname});
+
+        if [[ ${?} -eq 0 ]]; then
+
+            databaseCount=$(wc -l <<< "${availableDatabases}")
+
+            if [[ ${newDefaultHostgroupCount} = -1 || $((databaseCount)) < $((newDefaultHostgroupCount)) ]]; then
+                newDefaultHostgroupCount=$((databaseCount))
+                newDefaultHostgroup=$((hostgroup))
+            fi
+        fi
+    done <<< "${servers}"
+
+    if [[ ${newDefaultHostgroupCount} -ne -1 ]]; then
+        echo -e "\e[33m Setting default hostgroup for ${MYSQL_ADMIN_USERNAME}: ${newDefaultHostgroup} (${newDefaultHostgroupCount} databases) \e[0m"
+
+        proxysql_execute_query_hr "
+            REPLACE INTO mysql_users (username, password, default_hostgroup, transaction_persistent, fast_forward)
+            VALUES ('${MYSQL_ADMIN_USERNAME}', '${MYSQL_ADMIN_PASSWORD}', '${newDefaultHostgroup}', 0, 0);
+            LOAD MYSQL USERS TO RUN;
+        " ${PROXYSQL_SERVICE}
+    else
+        echo -e "No suitable database found! Check your config"
+    fi
+}
+
+commands_add "sync:node" "Synchronize this node from backends"
+command_sync:node() {
     local resetDefaultHostgroup="${2:-1}" # set default value to 1
 
     proxysql_wait_for_admin
@@ -114,41 +164,39 @@ command_sync() {
                 newDefaultHostgroup=$((hostgroup))
             fi
 
-            if [[ ${joinExistingCluster} -eq 0 ]]; then
-                databasesString=$(echo "${availableDatabases}" | awk -vORS=, '{ print $1 }' | sed 's/,$/\n/')
+            databasesString=$(echo "${availableDatabases}" | awk -vORS=, '{ print $1 }' | sed 's/,$/\n/')
 
-                echo -e "\e[33m Adding schema rules... \n --- \e[0m"
+            echo -e "\e[33m Adding schema rules... \n --- \e[0m"
+
+            proxysql_execute_query  "
+                INSERT INTO mysql_query_rules (active, match_pattern, destination_hostgroup, apply )
+                VALUES (1, '\/\*.*\s*hg\s*=\s*${hostgroup}\s*.*\*\/', '${hostgroup}', 1);"
+
+            while read database; do
 
                 proxysql_execute_query  "
-                    INSERT INTO mysql_query_rules (active, match_pattern, destination_hostgroup, apply )
-                    VALUES (1, '\/\*.*\s*hg\s*=\s*${hostgroup}\s*.*\*\/', '${hostgroup}', 1);"
+                    INSERT INTO mysql_query_rules (active, schemaname, destination_hostgroup, apply )
+                    VALUES (1, ${database}, '${hostgroup}', 1);"
 
-                while read database; do
+            done <<< "${availableDatabases}"
 
-                    proxysql_execute_query  "
-                        INSERT INTO mysql_query_rules (active, schemaname, destination_hostgroup, apply )
-                        VALUES (1, ${database}, '${hostgroup}', 1);"
+            echo -e "\e[33m Adding users... \n --- \e[0m"
 
-                done <<< "${availableDatabases}"
+            mysql_execute_query "
+                SELECT u.User, u.authentication_string, db.db
+                FROM mysql.db as db
+                JOIN mysql.user as u ON (u.User = db.User)
+                WHERE db.db IN (${databasesString})
+            " ${hostname} | while read username password database; do
 
-                echo -e "\e[33m Adding users... \n --- \e[0m"
+                proxysql_execute_query "
+                    REPLACE INTO mysql_users (username, password, default_schema, default_hostgroup)
+                    VALUES ('${username}', '${password}', '${database}', '${hostgroup}');"
 
-                mysql_execute_query "
-                    SELECT u.User, u.authentication_string, db.db
-                    FROM mysql.db as db
-                    JOIN mysql.user as u ON (u.User = db.User)
-                    WHERE db.db IN (${databasesString})
-                " ${hostname} | while read username password database; do
-
-                    proxysql_execute_query "
-                        REPLACE INTO mysql_users (username, password, default_schema, default_hostgroup)
-                        VALUES ('${username}', '${password}', '${database}', '${hostgroup}');"
-
-                    if [[ ${?} -eq 1 ]]; then
-                        echo -e "Adding ${username}:${database} failed"
-                    fi
-                done
-            fi
+                if [[ ${?} -eq 1 ]]; then
+                    echo -e "Adding ${username}:${database} failed"
+                fi
+            done
         fi
     done <<< "${servers}"
 
@@ -159,13 +207,6 @@ command_sync() {
             proxysql_execute_query  "
                 REPLACE INTO mysql_users (username, password, default_hostgroup, transaction_persistent, fast_forward)
                 VALUES ('${MYSQL_ADMIN_USERNAME}', '${MYSQL_ADMIN_PASSWORD}', '${newDefaultHostgroup}', 0, 0);"
-
-            proxysql_execute_query "
-                LOAD MYSQL VARIABLES TO RUN;
-                LOAD MYSQL QUERY RULES TO RUN;
-                LOAD MYSQL USERS TO RUN;
-                LOAD MYSQL SERVERS TO RUN;
-                LOAD ADMIN VARIABLES TO RUN;";
         else
             echo -e "No suitable database found! Check your config"
         fi
@@ -173,25 +214,37 @@ command_sync() {
         echo -e "Not replacing the default hostgroup for ${MYSQL_ADMIN_USERNAME}"
     fi
 
+    proxysql_execute_query "
+        LOAD MYSQL VARIABLES TO RUN;
+        LOAD MYSQL QUERY RULES TO RUN;
+        LOAD MYSQL USERS TO RUN;
+        LOAD MYSQL SERVERS TO RUN;
+        LOAD ADMIN VARIABLES TO RUN;";
+
     sleep 1
+    echo -e " -- node synced -- "
+}
 
-    if [[ ${joinExistingCluster} -eq 1 ]]; then
-        echo -e "\e[33m Joining cluster \e[0m"
+commands_add "sync:cluster" "Synchronize this node from backends and update the cluster"
+command_sync:cluster() {
 
-        proxysql_execute_query "
-            INSERT INTO proxysql_servers VALUES ('${IP}', 6032, 0, '${IP}');
-            LOAD PROXYSQL SERVERS TO RUN;
-        " "${PROXYSQL_SERVICE}";
+    command_sync:node
 
-        sleep 5
+    echo -e "\e[33m Joining cluster \e[0m"
 
-        echo -e "\e[33m Leaving cluster \e[0m"
+    proxysql_execute_query "
+        INSERT INTO proxysql_servers VALUES ('${IP}', 6032, 0, '${IP}');
+        LOAD PROXYSQL SERVERS TO RUN;
+    " "${PROXYSQL_SERVICE}";
 
-        proxysql_execute_query "
-            DELETE FROM proxysql_servers WHERE hostname = '${IP}';
-            LOAD PROXYSQL SERVERS TO RUN;
-        " "${PROXYSQL_SERVICE}";
-    fi
-    echo -e " -- DONE -- "
+    sleep 5
+
+    echo -e "\e[33m Leaving cluster \e[0m"
+
+    proxysql_execute_query "
+        DELETE FROM proxysql_servers WHERE hostname = '${IP}';
+        LOAD PROXYSQL SERVERS TO RUN;
+    " "${PROXYSQL_SERVICE}";
+
     sleep 1
 }

@@ -55,7 +55,7 @@ helm install --name db-proxy deploy/charts/proxysql-cluster
 | `mysql.monitor.password` | Monitor password on MySQL instances for `proxysql` health checks | `monitor` |
 | `mysql.admin.username` | Root / admin username on MySQL instances | `root` |
 | `mysql.admin.password` | Root / admin password on MySQL instances | `insecurepassword` |
-| `cronjob.enabled` | Enable k8s `CronJob` to sync `proxysql` configurations | `false` |
+| `cronjob.enabled` | Enable k8s `CronJob` to set the default hostgroup to the backend having the least # databases | `false` |
 | `resources` | CPU / Memory Limits and Requests | `{}` |
 | `tolerations` | Pod tolerations | '{}' |
 
