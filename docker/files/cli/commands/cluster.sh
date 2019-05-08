@@ -120,7 +120,7 @@ command_sync:default-hostgroup() {
 
 commands_add "sync:node" "Synchronize this node from backends"
 command_sync:node() {
-    local resetDefaultHostgroup="${2:-1}" # set default value to 1
+    local resetDefaultHostgroup="${1:-1}" # set default value to 1
 
     proxysql_wait_for_admin
 
