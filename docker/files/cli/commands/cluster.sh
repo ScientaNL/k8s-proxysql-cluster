@@ -248,3 +248,21 @@ command_sync:cluster() {
 
     sleep 1
 }
+
+commands_add "sync:checkOnline" "Check if all available server are online"
+command_sync:checkOnline() {
+
+    echo -e "\e[33m Check config quantity \e[0m"
+
+    count = $(
+    proxysql_execute_query "
+        SELECT COUNT (*) FROM mysql_servers;
+    " "${PROXYSQL_SERVICE}";
+    )
+
+    sleep 5
+
+    echo -e "\e[33m Check Offline quantity \e[0m"
+
+    sleep 1
+}
