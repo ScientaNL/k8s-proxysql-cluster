@@ -16,4 +16,6 @@ else
 	set -- proxysql -f "$@"
 fi
 
+proxysql-cli sync:checkOnline
+
 exec "${@}"
