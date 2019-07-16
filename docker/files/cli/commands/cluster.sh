@@ -30,6 +30,8 @@ command_init() {
 
     sleep 5
 
+    command_sync:checkOnline
+
     touch /proxysql-ready
 }
 
