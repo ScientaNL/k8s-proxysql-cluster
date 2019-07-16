@@ -22,9 +22,9 @@ RUN apt-get update && \
     rm -f /tmp/proxysql-${PROXYSQL_VERSION}-debian9_amd64.deb && \
     rm -rf /var/lib/apt/lists/*
 
-COPY proxysql-k8s-cluster.cnf /etc/proxysql.cnf
-COPY entrypoint.sh /entrypoint.sh
-COPY cli/ /proxysql-cli
+COPY /docker/files/proxysql-k8s-cluster.cnf /etc/proxysql.cnf
+COPY /docker/files/entrypoint.sh /entrypoint.sh
+COPY /docker/files/cli/ /proxysql-cli
 
 RUN ln -s /proxysql-cli/proxysql-cli.sh /usr/bin/proxysql-cli && \
     chmod +x -R /entrypoint.sh /proxysql-cli /etc/proxysql.cnf
