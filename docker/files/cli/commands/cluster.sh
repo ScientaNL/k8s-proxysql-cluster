@@ -254,15 +254,34 @@ command_sync:checkOnline() {
 
     echo -e "\e[33m Check config quantity \e[0m"
 
-    count = $(
+    count=$(
     proxysql_execute_query "
         SELECT COUNT (*) FROM mysql_servers;
     " "${PROXYSQL_SERVICE}";
     )
+    echo -e "\e[33m There are" $count "servers to check \e[0m"
 
     sleep 5
 
     echo -e "\e[33m Check Offline quantity \e[0m"
+
+    proxysql_execute_query "
+        SELECT hostgroup_id,status FROM mysql_servers;
+    " | while read hostgroup_id status; do
+	  # use $hostgroup_id and $status variables
+	    echo "hostID: $hostgroup_id, status: $status"
+	    if [ ! "$status" = "ONLINE" ]; then
+		    var=$((var + 1))
+		    echo "It's offline..." $var
+        echo -e "\e[33m Found:" $var " of " $count " servers total \e[0m"
+			    if [ $var = $count ]; then
+			    # all server are offline
+			    echo -e "\e[33m Kill it with fire!!! \e[0m"
+			    fi
+	    else
+		    echo "It's online... Proceed init"
+	    fi
+    done
 
     sleep 1
 }
