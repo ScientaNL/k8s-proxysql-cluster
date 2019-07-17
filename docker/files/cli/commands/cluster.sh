@@ -254,14 +254,16 @@ command_sync:cluster() {
 commands_add "sync:checkOnline" "Check if all available server are online"
 command_sync:checkOnline() {
 
-    echo -e "\e[33m Check config quantity \e[0m"
+    sleep 5
 
-    count=$(
+    echo -e "\e[33m Check RW and RO config entry \e[0m"
+
+    confTotal=$(
     proxysql_execute_query "
         SELECT COUNT (*) FROM mysql_servers;
     " "${PROXYSQL_SERVICE}";
     )
-    echo -e "\e[33m There are" $count "servers to check \e[0m"
+    echo -e "\e[33m There are" $confTotal "server entry's to check \e[0m"
 
     sleep 5
 
@@ -273,15 +275,15 @@ command_sync:checkOnline() {
 	  # use $hostgroup_id and $status variables
 	    echo "hostID: $hostgroup_id, status: $status"
 	    if [ ! "$status" = "ONLINE" ]; then
-		    var=$((var + 1))
-		    echo "It's offline..." $var
-        echo -e "\e[33m Found:" $var " of " $count " servers total \e[0m"
-			    if [ $var = $count ]; then
+		    foundTotal=$((foundTotal + 1))
+		    echo "It's offline..." $foundTotal
+        echo -e "\e[33m Found:" $foundTotal " of " $confTotal " servers total \e[0m"
+			    if [ $foundTotal = $confTotal ]; then
 			    # all server are offline
-			    echo -e "\e[33m Kill it with fire!!! \e[0m"
+			    echo -e "\e[33m All servers are offline, exit container... \e[0m"
 			    fi
 	    else
-		    echo "It's online... Proceed init"
+		    echo "Proceed init..."
 	    fi
     done
 
