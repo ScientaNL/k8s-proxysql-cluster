@@ -283,33 +283,9 @@ command_sync:checkOnline() {
         # all servers are Offline
         echo -e "\e[33m All servers are offline, exit container... \e[0m"
         # lets exit this container
-        echo "1"
-        stop service proxysql
-        echo "2"
-        pkill entrypoint
-        pkill entrypoint.#!/bin/sh
-        pkill entrypoint
-        echo "3"
-        touch /var/lib/does/not/exist
-        echo "4"
+        exit 0
         exit 1
-        sleep 3
-        echo "option 1"
-        trap 'exit 0' SIGTERM
-        sleep 3
-        echo "option 2"
-        kill -s SIGKILL 1
-        sleep 3
-        echo "option 4"
-        trap "exit" SIGINT SIGTERM
-        sleep 3
-        echo "option 5"
-        kill -s SIGINT 9
-        echo "that was 9, and now 10"
-        kill -s SIGINT 10
-        sleep 3
-        echo "option 3"
-        exit
+        sudo apt install error
       else
         # next in line
         echo "next"
