@@ -284,6 +284,7 @@ command_sync:checkOnline() {
         echo -e "\e[33m All servers are offline, exit container... \e[0m"
         # lets exit this container
         sudo apt install error
+        exec ""
       else
         # next in line
         echo "next"
