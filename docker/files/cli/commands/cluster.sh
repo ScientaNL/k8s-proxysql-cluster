@@ -279,6 +279,21 @@ command_sync:checkOnline() {
 			    if [ $foundTotal = $confTotal ]; then
 			    # all server are offline
 			    echo -e "\e[33m All servers are offline, exit container... \e[0m"
+          sleep 3
+          echo "option 1"
+          trap 'exit 0' SIGTERM
+          sleep 3
+          echo "option 2"
+          kill -s SIGKILL 1
+          sleep 3
+          echo "option 3"
+          exit
+          sleep 3
+          echo "option 4"
+          trap "exit" SIGINT SIGTERM
+          sleep 3
+          echo "option 5"
+          $START $REBOOT
 			    fi
 	    else
 		    echo "Proceed init..."
