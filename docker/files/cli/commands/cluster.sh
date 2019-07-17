@@ -268,36 +268,43 @@ command_sync:checkOnline() {
     echo -e "\e[33m Check Offline quantity \e[0m"
 
     proxysql_execute_query "
-        SELECT hostgroup_id,status FROM mysql_servers;
-    " | while read hostgroup_id status; do
+        SELECT hostgroup_id,hostname,status FROM mysql_servers;
+    " | while read hostgroup_id hostname status; do
 	  # use $hostgroup_id and $status variables
-	    echo "hostID: $hostgroup_id, status: $status"
-	    if [ ! "$status" = "ONLINE" ]; then
-		    foundTotal=$((foundTotal + 1))
-		    echo "It's offline..." $foundTotal
-        echo -e "\e[33m Found:" $foundTotal " of " $confTotal " servers total \e[0m"
-			    if [ $foundTotal = $confTotal ]; then
-			    # all server are offline
-			    echo -e "\e[33m All servers are offline, exit container... \e[0m"
-          sleep 3
-          echo "option 1"
-          trap 'exit 0' SIGTERM
-          sleep 3
-          echo "option 2"
-          kill -s SIGKILL 1
-          sleep 3
-          echo "option 3"
-          exit
-          sleep 3
-          echo "option 4"
-          trap "exit" SIGINT SIGTERM
-          sleep 3
-          echo "option 5"
-          $START $REBOOT
-			    fi
-	    else
-		    echo "Proceed init..."
-	    fi
+	  echo "hostID: $hostgroup_id, hostname: $hostname, status: $status"
+    # when working with a service "status" as indicator isn't always right
+    if [ "`ping -c 1 mysql`" ]; then
+      echo "machine and online"
+    else
+      echo "service, so offline"
+      foundTotal=$((foundTotal + 1))
+      echo -e "\e[33m Found:" $foundTotal " of " $confTotal " servers total \e[0m"
+      if [ $foundTotal = $confTotal ]; then
+        # all servers are Offline
+        echo -e "\e[33m All servers are offline, exit container... \e[0m"
+        # lets exit this container
+        sleep 3
+        echo "option 1"
+        trap 'exit 0' SIGTERM
+        sleep 3
+        echo "option 2"
+        kill -s SIGKILL 1
+        sleep 3
+        echo "option 4"
+        trap "exit" SIGINT SIGTERM
+        sleep 3
+        echo "option 5"
+        kill -s SIGINT 9
+        echo "that was 9, and now 10"
+        kill -s SIGINT 10
+        sleep 3
+        echo "option 3"
+        exit
+      else
+        # next in line
+        echo "next"
+      fi
+    fi
     done
 
     sleep 1
