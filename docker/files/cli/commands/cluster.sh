@@ -283,16 +283,7 @@ command_sync:checkOnline() {
         # all servers are Offline
         echo -e "\e[33m All servers are offline, exit container... \e[0m"
         # lets exit this container
-        kill -9 1
-        kill -9 2
-        kill -9 3
-        kill -9 4
-        kill -9 5
-        kill -9 6
-        kill -9 7
-        kill -9 8
-        kill -9 9
-        kill -l
+        proxysql stop
       else
         # next in line
         echo "next"
