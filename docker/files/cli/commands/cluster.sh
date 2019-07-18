@@ -281,9 +281,10 @@ command_sync:checkOnline() {
       echo -e "\e[33m Found:" $foundTotal " offline server(s), out of " $confTotal " server(s) total \e[0m"
       if [ $foundTotal = $confTotal ]; then
         # All servers are Offline
-        echo -e "\e[33m All servers are offline, exit this container... \e[0m"
+        echo -e "\e[33m All servers are offline, this container is unhealthy. \e[0m"
         # lets exit this container using liveness probe
         rm -rf /proxysql-liveness
+        echo -e "\e[33m Liveness state updated to destroy this container. \e[0m"
       fi
     fi
     done
