@@ -251,42 +251,39 @@ command_sync:cluster() {
     sleep 1
 }
 
-commands_add "sync:checkOnline" "Check if all available server are online"
+commands_add "sync:checkOnline" "Check if all available servers are online"
 command_sync:checkOnline() {
 
-    echo -e "\e[33m Check RW and RO config entry \e[0m"
+    echo -e "\e[33m Check added MySQL servers \e[0m"
 
     confTotal=$(
     proxysql_execute_query "
         SELECT COUNT (*) FROM mysql_servers;
     ";
     )
-    echo -e "\e[33m There are" $confTotal "server entry's to check \e[0m"
+    echo -e "\e[33m There number of servers found is" $confTotal "in total \e[0m"
 
     sleep 5
 
-    echo -e "\e[33m Check Offline quantity \e[0m"
+    echo -e "\e[33m Check total of offline servers \e[0m"
 
     proxysql_execute_query "
         SELECT hostgroup_id,hostname,status FROM mysql_servers;
     " | while read hostgroup_id hostname status; do
 	  # use $hostgroup_id and $status variables
-	  echo "hostID: $hostgroup_id, hostname: $hostname, status: $status"
+	  echo "Checking - hostID: $hostgroup_id, hostname: $hostname, status: $status"
     # when working with a service "status" as indicator isn't always right
     if mysqladmin ping -u${MYSQL_ADMIN_USERNAME} -p${MYSQL_ADMIN_PASSWORD} -h$hostname; then
-      echo "machine and online"
+      echo "It's operation normaly"
     else
-      echo "service, so offline"
+      echo "No active MySQL server found"
       foundTotal=$((foundTotal + 1))
-      echo -e "\e[33m Found:" $foundTotal " of " $confTotal " servers total \e[0m"
+      echo -e "\e[33m Found:" $foundTotal " offline server, outof " $confTotal " server(s) total \e[0m"
       if [ $foundTotal = $confTotal ]; then
-        # all servers are Offline
-        echo -e "\e[33m All servers are offline, exit container... \e[0m"
+        # All servers are Offline
+        echo -e "\e[33m All servers are offline, exit this container... \e[0m"
         # lets exit this container using liveness probe
         rm -rf /proxysql-liveness
-      else
-        # next in line
-        echo "next"
       fi
     fi
     done
