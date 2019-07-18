@@ -273,7 +273,7 @@ command_sync:checkOnline() {
 	  # use $hostgroup_id and $status variables
 	  echo "hostID: $hostgroup_id, hostname: $hostname, status: $status"
     # when working with a service "status" as indicator isn't always right
-    if mysql -u${MYSQL_ADMIN_USERNAME} -p${MYSQL_ADMIN_PASSWORD} -h$hostname -P3306  -e ";" ; then
+    if mysqladmin ping -u${MYSQL_ADMIN_USERNAME} -p${MYSQL_ADMIN_PASSWORD} -h$hostname; then
       echo "machine and online"
     else
       echo "service, so offline"
