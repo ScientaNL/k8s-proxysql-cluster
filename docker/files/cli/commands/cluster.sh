@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+set -e
+
 commands_add "init" "Add this node to the cluster"
 command_init() {
 
@@ -284,7 +286,8 @@ command_sync:checkOnline() {
         echo -e "\e[33m All servers are offline, exit container... \e[0m"
         # lets exit this container
         proxysql stop
-        exec "$"
+        exit 1
+        exec "$?"
         exec "${@}"
       else
         # next in line
