@@ -274,9 +274,9 @@ command_sync:checkOnline() {
 	  echo "Checking - hostID: $hostgroup_id, hostname: $hostname, status: $status"
     # when working with a service "status" as indicator isn't always right
     if mysqladmin ping -u${MYSQL_ADMIN_USERNAME} -p${MYSQL_ADMIN_PASSWORD} -h$hostname; then
-      echo "\e[33m $hostname is operating normaly \e[0m"
+      echo -e "\e[33m $hostname is operating normaly \e[0m"
     else
-      echo "\e[33m $hostname is not active \e[0m"
+      echo -e "\e[33m $hostname is not active \e[0m"
       foundTotal=$((foundTotal + 1))
       echo -e "\e[33m Found:" $foundTotal " offline server(s), out of " $confTotal " server(s) total \e[0m"
       if [ $foundTotal = $confTotal ]; then
