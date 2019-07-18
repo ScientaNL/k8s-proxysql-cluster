@@ -261,7 +261,7 @@ command_sync:checkOnline() {
         SELECT COUNT (*) FROM mysql_servers;
     ";
     )
-    echo -e "\e[33m There number of servers found is" $confTotal "in total \e[0m"
+    echo -e "\e[33m The number of servers found is" $confTotal "in total \e[0m"
 
     sleep 5
 
