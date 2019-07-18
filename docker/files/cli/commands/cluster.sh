@@ -30,6 +30,8 @@ command_init() {
 
     sleep 5
 
+    command_sync:checkOnline
+
     touch /proxysql-ready
 }
 
@@ -245,6 +247,49 @@ command_sync:cluster() {
         DELETE FROM proxysql_servers WHERE hostname = '${IP}';
         LOAD PROXYSQL SERVERS TO RUN;
     " "${PROXYSQL_SERVICE}";
+
+    sleep 1
+}
+
+commands_add "sync:checkOnline" "Check if all available server are online"
+command_sync:checkOnline() {
+
+    echo -e "\e[33m Check RW and RO config entry \e[0m"
+
+    confTotal=$(
+    proxysql_execute_query "
+        SELECT COUNT (*) FROM mysql_servers;
+    ";
+    )
+    echo -e "\e[33m There are" $confTotal "server entry's to check \e[0m"
+
+    sleep 5
+
+    echo -e "\e[33m Check Offline quantity \e[0m"
+
+    proxysql_execute_query "
+        SELECT hostgroup_id,hostname,status FROM mysql_servers;
+    " | while read hostgroup_id hostname status; do
+	  # use $hostgroup_id and $status variables
+	  echo "hostID: $hostgroup_id, hostname: $hostname, status: $status"
+    # when working with a service "status" as indicator isn't always right
+    if mysqladmin ping -u${MYSQL_ADMIN_USERNAME} -p${MYSQL_ADMIN_PASSWORD} -h$hostname; then
+      echo "machine and online"
+    else
+      echo "service, so offline"
+      foundTotal=$((foundTotal + 1))
+      echo -e "\e[33m Found:" $foundTotal " of " $confTotal " servers total \e[0m"
+      if [ $foundTotal = $confTotal ]; then
+        # all servers are Offline
+        echo -e "\e[33m All servers are offline, exit container... \e[0m"
+        # lets exit this container using liveness probe
+        rm -rf /proxysql-liveness
+      else
+        # next in line
+        echo "next"
+      fi
+    fi
+    done
 
     sleep 1
 }
