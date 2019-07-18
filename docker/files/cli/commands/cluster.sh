@@ -265,7 +265,7 @@ command_sync:checkOnline() {
 
     sleep 5
 
-    echo -e "\e[33m Check total of offline servers \e[0m"
+    echo -e "\e[33m Check current state of all available servers \e[0m"
 
     proxysql_execute_query "
         SELECT hostgroup_id,hostname,status FROM mysql_servers;
@@ -274,17 +274,17 @@ command_sync:checkOnline() {
 	  echo "Checking - hostID: $hostgroup_id, hostname: $hostname, status: $status"
     # when working with a service "status" as indicator isn't always right
     if mysqladmin ping -u${MYSQL_ADMIN_USERNAME} -p${MYSQL_ADMIN_PASSWORD} -h$hostname; then
-      echo "It's operating normaly"
+      echo "\e[33m $hostname is operating normaly \e[0m"
     else
-      echo "No active MySQL server found"
+      echo "\e[33m $hostname is not active \e[0m"
       foundTotal=$((foundTotal + 1))
+      echo -e "\e[33m Found:" $foundTotal " offline server(s), out of " $confTotal " server(s) total \e[0m"
       if [ $foundTotal = $confTotal ]; then
         # All servers are Offline
         echo -e "\e[33m All servers are offline, exit this container... \e[0m"
         # lets exit this container using liveness probe
         rm -rf /proxysql-liveness
       fi
-      echo -e "\e[33m Found:" $foundTotal " offline server(s), out of " $confTotal " server(s) total \e[0m"
     fi
     done
 
