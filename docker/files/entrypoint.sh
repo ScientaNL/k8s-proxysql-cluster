@@ -14,6 +14,9 @@ if [[ "${1}" = "--cluster" ]]; then
 elif [[ "${1}" = "--sync_cluster" ]]; then
 	proxysql -f --initial &> /dev/null &
 	set -- proxysql-cli sync:cluster
+elif [[ "${1}" = "--sync_default_hostgroup" ]]; then
+	proxysql -f --initial &> /dev/null &
+	set -- proxysql-cli sync:default-hostgroup
 else
 	set -- proxysql -f "$@"
 fi
