@@ -71,6 +71,9 @@ command_remove() {
 
 commands_add "sync:default-hostgroup" "Synchronize the default hostgroup from backends to the cluster"
 command_sync:default-hostgroup() {
+
+    proxysql_wait_for_admin
+
     newDefaultHostgroup=-1
     newDefaultHostgroupCount=-1
 
