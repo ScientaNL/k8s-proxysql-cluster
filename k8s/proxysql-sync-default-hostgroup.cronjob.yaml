@@ -13,7 +13,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: proxysql-sync-default-hostgroup
-              image: "scienta/k8s-proxysql-cluster:1.2.1"
+              image: "scienta/k8s-proxysql-cluster:1.2.2"
               imagePullPolicy: Always
               args: ["--sync_default_hostgroup"]
 
