@@ -40,6 +40,15 @@ function proxysql_wait_for_admin() {
     done
 }
 
+function proxysql_wait_for_admin_job() {
+
+    SLEEP=${1:-.1}
+
+    while ! mysqladmin ping -u${PROXYSQL_ADMIN_USERNAME} -p${PROXYSQL_ADMIN_PASSWORD} -h${PROXYSQL_SERVICE} -P6032 --silent; do
+        sleep ${SLEEP}
+    done
+}
+
 function proxysql_check_if_first() {
     proxysql_execute_query "SELECT COUNT(*) FROM proxysql_servers WHERE hostname NOT IN ('${PROXYSQL_SERVICE}', '${IP}')"
 }
