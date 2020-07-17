@@ -175,7 +175,7 @@ command_sync:node() {
 
             proxysql_execute_query  "
                 INSERT INTO mysql_query_rules (active, match_pattern, destination_hostgroup, apply )
-                VALUES (1, '\/\*.*\s*hg\s*=\s*${hostgroup}\s*.*\*\/', '${hostgroup}', 1);"
+                VALUES (1, '\/\* HG${hostgroup} \*\/', '${hostgroup}', 1);"
 
             while read database; do
 
