@@ -1,7 +1,7 @@
 FROM debian:stretch-slim
 LABEL maintainer="Scienta <info@scienta.nl>"
 
-ENV PROXYSQL_VERSION "1.4.14"
+ENV PROXYSQL_VERSION "2.3.2"
 
 ENV PROXYSQL_SERVICE proxysql
 
