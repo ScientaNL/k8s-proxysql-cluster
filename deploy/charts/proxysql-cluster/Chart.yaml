@@ -1,5 +1,5 @@
 name: proxysql-cluster
-version: 2.3.2
+version: 2.0.0
 description: Chart for ProxySQL Cluster
 keywords:
 - mysql
