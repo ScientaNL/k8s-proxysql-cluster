@@ -101,7 +101,7 @@ command_sync:default-hostgroup() {
 
             databaseCount=$(wc -l <<< "${availableDatabases}")
 
-            if [[ ${newDefaultHostgroupCount} = -1 || $((databaseCount)) < $((newDefaultHostgroupCount)) ]]; then
+            if [[ ${newDefaultHostgroupCount} = -1 || $((databaseCount)) -lt $((newDefaultHostgroupCount)) ]]; then
                 newDefaultHostgroupCount=$((databaseCount))
                 newDefaultHostgroup=$((hostgroup))
             fi
@@ -162,7 +162,7 @@ command_sync:node() {
 
             databaseCount=$(wc -l <<< "${availableDatabases}")
 
-            if [[ ${newDefaultHostgroupCount} = -1 || $((databaseCount)) < $((newDefaultHostgroupCount)) ]]; then
+            if [[ ${newDefaultHostgroupCount} = -1 || $((databaseCount)) -lt $((newDefaultHostgroupCount)) ]]; then
                 newDefaultHostgroupCount=$((databaseCount))
                 newDefaultHostgroup=$((hostgroup))
             fi
