@@ -136,6 +136,10 @@ command_sync:node() {
     newDefaultHostgroup=-1
     newDefaultHostgroupCount=-1
 
+    proxysql_execute_query "
+        SAVE MYSQL SERVERS TO MEMORY;
+    ";
+
     servers=$(proxysql_execute_query "
         SELECT hostname, hostgroup_id
         FROM mysql_servers
