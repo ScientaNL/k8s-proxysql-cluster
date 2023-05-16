@@ -1,4 +1,4 @@
-FROM debian:stretch-slim
+FROM debian:bullseye-slim
 LABEL maintainer="Scienta <info@scienta.nl>"
 
 ENV PROXYSQL_VERSION "2.4.4"
@@ -14,12 +14,12 @@ ENV MYSQL_ADMIN_PASSWORD password
 RUN apt-get update && \
     apt-get install -y \
     wget \
-    mysql-client \
+    default-mysql-client \
     gettext-base \
     bsdmainutils && \
-    wget https://github.com/sysown/proxysql/releases/download/v${PROXYSQL_VERSION}/proxysql_${PROXYSQL_VERSION}-debian9_amd64.deb -O /tmp/proxysql-${PROXYSQL_VERSION}-debian9_amd64.deb && \
-    dpkg -i /tmp/proxysql-${PROXYSQL_VERSION}-debian9_amd64.deb && \
-    rm -f /tmp/proxysql-${PROXYSQL_VERSION}-debian9_amd64.deb && \
+    wget https://github.com/sysown/proxysql/releases/download/v${PROXYSQL_VERSION}/proxysql_${PROXYSQL_VERSION}-debian11_amd64.deb -O /tmp/proxysql-${PROXYSQL_VERSION}-debian11_amd64.deb && \
+    dpkg -i /tmp/proxysql-${PROXYSQL_VERSION}-debian11_amd64.deb && \
+    rm -f /tmp/proxysql-${PROXYSQL_VERSION}-debian11_amd64.deb && \
     rm -rf /var/lib/apt/lists/*
 
 COPY ./files/proxysql-k8s-cluster.cnf /etc/proxysql.cnf
